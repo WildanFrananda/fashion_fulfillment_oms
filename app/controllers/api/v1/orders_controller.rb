@@ -1,0 +1,122 @@
+# typed: strict
+
+module Api
+  module V1
+    class OrdersController < ApplicationController
+      extend T::Sig
+
+      sig { void }
+      def create
+        api_key_handler = request.headers["X-Merchant-Api-Key"]
+        api_key = api_key_handler.is_a?(String) ? api_key_handler : params[:api_key].to_s
+        return render json: { error: "Unauthorized: Missing Api Key" }, status: :unauthorized if api_key.empty?
+
+        merchant_repo = T.let(Container[:merchant_repository], MerchantRepositoryInterface)
+        merchant = merchant_repo.find_by_api_key(api_key)
+        return render json: { error: "Unauthorized: Invalid API Key" }, status: :unauthorized unless merchant
+
+        merchant_id = T.let(merchant.id, Integer)
+
+        raw_items = params[:items]
+        items = T.let([], T::Array[Orders::CreateOrderForm::ItemInput])
+        if raw_items.is_a?(Array)
+          raw_items.each do |item|
+            next unless item.is_a?(ActionController::Parameters) || item.is_a?(Hash)
+
+            items << Orders::CreateOrderForm::ItemInput.new(
+              sku: item[:sku].to_s,
+              product_name: item[:product_name].to_s,
+              quantity: item[:quantity].to_i,
+              price: BigDecimal(item[:price].to_s),
+            )
+          end
+        end
+
+        form = Orders::CreateOrderForm.new(
+          order_number: params[:order_number].to_s,
+          buyer_name: params[:buyer_name].to_s,
+          buyer_phone: params[:buyer_phone].to_s,
+          shipping_address: params[:shipping_address].to_s,
+          total_amount: BigDecimal(params[:total_amount].to_s),
+          items: items
+        )
+
+        service = T.let(Container[:create_order_service], Orders::CreateOrderService)
+        result = service.call(merchant_id: merchant_id, form: form)
+
+        if result.success?
+          render json: result.data, status: :created
+        else
+          render json: { error: result.error }, status: :unprocessable_entity
+        end
+      end
+
+      sig { void }
+      def queue
+        api_key_header = request.headers["X-Merchant-Api-Key"]
+        api_key = api_key_header.is_a?(String) ? api_key_header : params[:api_key].to_s
+        return render json: { error: "Unauthorized: Missing API Key" }, status: :unauthorized if api_key.empty?
+
+        merchant_repo = T.let(Container[:merchant_repository], MerchantRepositoryInterface)
+        merchant = merchant_repo.find_by_api_key(api_key)
+        return render json: { error: "Unauthorized: Invalid API Key" }, status: :unauthorized unless merchant
+
+        service = T.let(Container[:get_order_queue_service], Orders::GetOrderQueueService)
+        result = service.call(merchant_id: merchant.id)
+
+        if result.success?
+          render json: result.data
+        else
+          render json: { error: result.error }, status: :unprocessable_entity
+        end
+      end
+
+      sig { void }
+      def update_status
+        api_key_header = request.headers["X-Merchant-Api-Key"]
+        api_key = api_key_header.is_a?(String) ? api_key_header : params[:api_key].to_s
+        return render json: { error: "Unauthorized: Missing API Key" }, status: :unauthorized if api_key.empty?
+
+        merchant_repo = T.let(Container[:merchant_repository], MerchantRepositoryInterface)
+        merchant = merchant_repo.find_by_api_key(api_key)
+        return render json: { error: "Unauthorized: Invalid API Key" }, status: :unauthorized unless merchant
+
+        service = T.let(Container[:update_order_status_service], Orders::UpdateOrderStatusService)
+        result = service.call(
+          merchant_id: merchant.id,
+          order_id: params[:id].to_i,
+          new_status: params[:status].to_s
+        )
+
+        if result.success?
+          render json: result.data
+        else
+          render json: { error: result.error }, status: :unprocessable_entity
+        end
+      end
+
+      sig { void }
+      def generate_label
+        api_key_header = request.headers["X-Merchant-Api-Key"]
+        api_key = api_key_header.is_a?(String) ? api_key_header : params[:api_key].to_s
+        return render json: { error: "Unauthorized: Missing API Key" }, status: :unauthorized if api_key.empty?
+
+        merchant_repo = T.let(Container[:merchant_repository], MerchantRepositoryInterface)
+        merchant = merchant_repo.find_by_api_key(api_key)
+        return render json: { error: "Unauthorized: Invalid API Key" }, status: :unauthorized unless merchant
+
+        service = T.let(Container[:generate_shipping_label_service], Labels::GenerateShippingLabelService)
+        result = service.call(
+          merchant_id: merchant.id,
+          order_id: params[:id].to_i
+        )
+
+        if result.success?
+          render json: result.data
+        else
+          render json: { error: result.error }, status: :unprocessable_entity
+        end
+      end
+    end
+  end
+end

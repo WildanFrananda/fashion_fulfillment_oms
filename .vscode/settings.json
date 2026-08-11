@@ -1,0 +1,17 @@
+{
+  "rubyLsp.rubyVersionManager": {
+    "identifier": "rbenv"
+  },
+  "rubyLsp.customRubyCommand": "rbenv exec ruby",
+  "sorbet.userLspConfig": [
+    {
+      "id": "bundle-exec-srb",
+      "name": "bundle exec srb tc",
+      "description": "Run Sorbet via Bundle Exec",
+      "command": ["bundle", "exec", "srb", "tc", "--lsp"]
+    }
+  ],
+  "rubyLsp.featuresConfiguration": {
+    "diagnostics": false
+  }
+}

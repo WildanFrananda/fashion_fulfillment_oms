@@ -1,0 +1,9 @@
+--dir
+.
+--ignore=/tmp/
+--ignore=/vendor/bundle
+--ignore=/db/migrate
+--ignore=/sorbet/rbi/dsl/rails
+--ignore=/config/ci.rb
+--suppress-payload-superclass-redefinition-for=Net::IMAP::Literal
+--suppress-payload-superclass-redefinition-for=Net::IMAP::QuotedString
