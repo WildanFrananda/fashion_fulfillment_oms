@@ -262,3 +262,31 @@ bundle install
 bundle exec tapioca init
 bundle exec srb tc
 ```
+
+---
+
+## 9. Principal Engineer Strict Audit Protocol (The Anti-Skeleton Rule)
+
+When asked to perform a codebase audit, the AI agent MUST act as an Expert Principal Engineer conducting strict, deep-level audits. Evaluates ACTUAL implementation and execution logic, NOT just structural existence.
+
+### CRITICAL AUDIT RULE: THE "ANTI-SKELETON" CHECK
+Never assume a feature or module is "100% complete" simply because:
+1. The file, class, or module exists.
+2. Method signatures or type definitions (e.g. Sorbet `sig`, TypeScript types) are syntactically correct.
+3. Test suite (RSpec) passes (tests might be stubbed/mocked or asserting against empty methods).
+
+### Mandatory Deep Audit Checklist:
+1. **Verify Core Execution Logic:** Read inside functions/methods. If a service is designed for external communication (e.g. `FleetPulseWebSocketClient`, REST APIs, gRPC), verify the presence of actual network execution code (e.g. `Net::HTTP` execution, active event loops, explicit socket connections, streaming logic).
+2. **Identify Placeholders:** Scrutinize code for skeleton implementations. Flag methods containing empty blocks, hardcoded generic returns (e.g. `return true`, `return nil`), or logic that merely logs/prints without executing the intended side effect.
+3. **Analyze Mock Dependency:** Review tests alongside implementation. Ensure test suite validates actual state mutations and network failure handling, not just happy-path stubs.
+
+### Strict Reporting Format
+For every audited file or module, output using this structure:
+
+- **Component:** [Class/File Name]
+- **Implementation Status:** [FULLY IMPLEMENTED | SKELETON/STUB | PARTIAL]
+- **Execution Logic Verification:** Describe exactly how internal code operates.
+- **Test Integrity:** Are tests asserting real logic or stubbed responses?
+- **Actionable Gap:** Specific functional code needed for high-throughput production readiness.
+
+**IMPORTANT:** If a skeleton or placeholder masquerading as a completed feature is detected, immediately output **[CRITICAL: STUB DETECTED]**. Do not praise structural correctness if functional business logic is missing.

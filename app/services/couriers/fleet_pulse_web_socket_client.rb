@@ -41,6 +41,38 @@ module Couriers
       @update_order_status_service = update_order_status_service
     end
 
+    sig do
+      params(
+        merchant_id: Integer,
+        ws_url: String
+      ).returns(BaseService::Result)
+    end
+    def connect(merchant_id:, ws_url: "ws://localhost:4000/socket/websocket")
+      topic = "merchant:orders:#{merchant_id}"
+
+      ws = Faye::WebSocket::Client.new(ws_url)
+
+      ws.on :open do |_event|
+        join_msg = build_join_frame(merchant_id: merchant_id)
+        ws.send(join_msg)
+      end
+
+      ws.on :message do |event|
+        frame = parse_frame(event.data.to_s)
+        process_incoming_frame(merchant_id: merchant_id, frame: frame) if frame
+      end
+
+      success(
+        ResultData.new(
+          merchant_id: merchant_id,
+          topic: topic,
+          status: "connected"
+        )
+      )
+    rescue StandardError => e
+      failure("Failed to connect to FleetPulse WebSocket: #{e.message}")
+    end
+
     sig { params(merchant_id: Integer, ref: String).returns(String) }
     def build_join_frame(merchant_id:, ref: "1")
       {

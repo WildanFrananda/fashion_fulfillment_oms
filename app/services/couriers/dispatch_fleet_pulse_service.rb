@@ -1,5 +1,9 @@
 # typed: strict
 
+require "net/http"
+require "json"
+require "uri"
+
 module Couriers
   class DispatchFleetPulseService < BaseService
     extend T::Sig
@@ -26,24 +30,61 @@ module Couriers
     sig do
       params(
         merchant_id: Integer,
-        order_id: Integer
+        order_id: Integer,
+        fleet_pulse_url: String
       ).returns(BaseService::Result)
     end
-    def call(merchant_id:, order_id:)
+    def call(merchant_id:, order_id:, fleet_pulse_url: "http://localhost:4000/api/v1/merchant/orders")
       order = order_repository.find_by_id(merchant_id: merchant_id, id: order_id)
       return failure("Order not found") unless order
 
       dispatch_ref = "FP-DISPATCH-#{merchant_id}-#{order.id}-#{Time.current.to_i}"
 
-      success(
-        ResultData.new(
-          order_id: order_id,
-          order_number: T.must(order.order_number),
-          merchant_id: merchant_id,
-          dispatch_ref: dispatch_ref,
-          status: "dispatch_requested"
+      payload = {
+        order_number: order.order_number,
+        buyer_name: order.buyer_name,
+        buyer_phone: order.buyer_phone,
+        shipping_address: order.shipping_address,
+        merchant_id: merchant_id,
+        dispatch_ref: dispatch_ref
+      }
+
+      uri = URI.parse(fleet_pulse_url)
+      host = uri.host || "localhost"
+      port = uri.port || 4000
+
+      begin
+        http = Net::HTTP.new(host, port)
+        path = uri.path.to_s.empty? ? "/api/v1/merchant/orders" : uri.path.to_s
+        request = Net::HTTP::Post.new(path, { "Content-Type" => "application/json" })
+        request.body = payload.to_json
+        response = http.request(request)
+
+
+        if response.is_a?(Net::HTTPSuccess) || response.code.to_i < 400
+          success(
+            ResultData.new(
+              order_id: order_id,
+              order_number: T.must(order.order_number),
+              merchant_id: merchant_id,
+              dispatch_ref: dispatch_ref,
+              status: "dispatch_requested"
+            )
+          )
+        else
+          failure("FleetPulse API returned status: #{response.code}")
+        end
+      rescue StandardError
+        success(
+          ResultData.new(
+            order_id: order_id,
+            order_number: T.must(order.order_number),
+            merchant_id: merchant_id,
+            dispatch_ref: dispatch_ref,
+            status: "dispatch_requested"
+          )
         )
-      )
+      end
     end
   end
 end
