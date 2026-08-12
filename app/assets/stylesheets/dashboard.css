@@ -7,6 +7,8 @@
   --danger: #ef4444;
   --warning: #f59e0b;
   --success: #10b981;
+  --purple: #8b5cf6;
+  --purple-hover: #7c3aed;
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
 }
@@ -47,7 +49,6 @@ body {
   border: 1px solid rgba(239, 68, 68, 0.4);
   color: #f87171;
 }
-
 
 .container {
   max-width: 1400px;
@@ -113,6 +114,51 @@ body {
   font-size: 14px;
 }
 
+/* Stepper Pipeline Styles */
+.pipeline-stepper {
+  display: flex;
+  gap: 12px;
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 12px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+}
+
+.step-pill {
+  flex: 1;
+  text-align: center;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--border-color);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.step-pill:hover, .step-pill.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.step-count {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+
 .grid-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -126,6 +172,9 @@ body {
   border-radius: 16px;
   padding: 20px;
   transition: transform 0.2s ease, border-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .order-card:hover {
@@ -144,6 +193,12 @@ body {
   font-weight: 700;
   font-size: 16px;
   color: #fff;
+}
+
+.badges-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .urgency-badge {
@@ -172,6 +227,31 @@ body {
   border: 1px solid rgba(99, 102, 241, 0.3);
 }
 
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-received { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; }
+.status-packing { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+.status-packed { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+.status-dispatched { background: rgba(139, 92, 246, 0.25); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.4); }
+.status-in_transit { background: rgba(59, 130, 246, 0.25); color: #60a5fa; }
+.status-delivered { background: rgba(16, 185, 129, 0.3); color: #6ee7b7; }
+
+.bin-badge {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #a7f3d0;
+  font-family: monospace;
+}
+
 .item-list {
   background: rgba(15, 23, 42, 0.5);
   border-radius: 10px;
@@ -187,6 +267,13 @@ body {
   color: var(--text-muted);
 }
 
+.actions-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
 .btn-action {
   width: 100%;
   padding: 10px;
@@ -197,8 +284,13 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
 }
 
-.btn-action:hover {
-  background: var(--primary-hover);
-}
+.btn-action:hover { background: var(--primary-hover); }
+.btn-fleetpulse { background: var(--purple); }
+.btn-fleetpulse:hover { background: var(--purple-hover); }
+.btn-success { background: var(--success); }
+.btn-success:hover { background: #059669; }

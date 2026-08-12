@@ -32,44 +32,115 @@
   </div>
 <% end %>
 
-<h2 style="margin-bottom: 20px; font-size: 22px; font-weight: 600;">📦 Operational Order SLA Queue</h2>
+<!-- 1. Pipeline Status Stepper Bar -->
+<div class="pipeline-stepper">
+  <% 
+    status_filter = params[:status_filter].to_s 
+    all_cards = @order_cards || []
+    count_all = all_cards.size
+    count_received = all_cards.count { |c| c.status == 'received' }
+    count_packing = all_cards.count { |c| c.status == 'packing' }
+    count_packed = all_cards.count { |c| c.status == 'packed' }
+    count_dispatched = all_cards.count { |c| c.status == 'dispatched' }
+    count_in_transit = all_cards.count { |c| c.status == 'in_transit' }
+    count_delivered = all_cards.count { |c| c.status == 'delivered' }
+
+    filtered_cards = if status_filter.present?
+      all_cards.select { |c| c.status == status_filter }
+    else
+      all_cards
+    end
+  %>
+
+  <%= link_to orders_path(merchant_id: @current_merchant&.id), class: "step-pill #{'active' if status_filter.empty?}" do %>
+    <span>All Orders</span> <span class="step-count"><%= count_all %></span>
+  <% end %>
+
+  <%= link_to orders_path(merchant_id: @current_merchant&.id, status_filter: 'received'), class: "step-pill #{'active' if status_filter == 'received'}" do %>
+    <span>1. Received</span> <span class="step-count"><%= count_received %></span>
+  <% end %>
+
+  <%= link_to orders_path(merchant_id: @current_merchant&.id, status_filter: 'packing'), class: "step-pill #{'active' if status_filter == 'packing'}" do %>
+    <span>2. Packing</span> <span class="step-count"><%= count_packing %></span>
+  <% end %>
+
+  <%= link_to orders_path(merchant_id: @current_merchant&.id, status_filter: 'packed'), class: "step-pill #{'active' if status_filter == 'packed'}" do %>
+    <span>3. Packed</span> <span class="step-count"><%= count_packed %></span>
+  <% end %>
+
+  <%= link_to orders_path(merchant_id: @current_merchant&.id, status_filter: 'dispatched'), class: "step-pill #{'active' if status_filter == 'dispatched'}" do %>
+    <span>4. Dispatched</span> <span class="step-count"><%= count_dispatched %></span>
+  <% end %>
+
+  <%= link_to orders_path(merchant_id: @current_merchant&.id, status_filter: 'in_transit'), class: "step-pill #{'active' if status_filter == 'in_transit'}" do %>
+    <span>5. In Transit</span> <span class="step-count"><%= count_in_transit %></span>
+  <% end %>
+
+  <%= link_to orders_path(merchant_id: @current_merchant&.id, status_filter: 'delivered'), class: "step-pill #{'active' if status_filter == 'delivered'}" do %>
+    <span>6. Delivered</span> <span class="step-count"><%= count_delivered %></span>
+  <% end %>
+</div>
+
+<h2 style="margin-bottom: 20px; font-size: 22px; font-weight: 600;">📦 Warehouse Operational Order Queue</h2>
 
 <div class="grid-container" id="order-queue-grid">
-  <% if @order_cards.empty? %>
+  <% if filtered_cards.empty? %>
     <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted);">
-      No orders in queue for this merchant.
+      No orders found for this pipeline stage.
     </div>
   <% else %>
-    <% @order_cards.each do |card| %>
+    <% filtered_cards.each_with_index do |card, idx| %>
       <div class="order-card" id="order-card-<%= card.id %>">
-        <div class="card-header">
-          <span class="order-num">#<%= card.order_number %></span>
-          <span class="urgency-badge urgency-<%= card.sla_urgency %>"><%= card.sla_urgency.tr('_', ' ') %></span>
-        </div>
-
-        <div style="font-size: 14px; color: var(--text-main); margin-bottom: 4px;">
-          👤 <%= card.buyer_name %>
-        </div>
-        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
-          📍 <%= card.shipping_address %>
-        </div>
-
-        <div class="item-list">
-          <% card.items.each do |item| %>
-            <div class="item-row">
-              <span><%= item.quantity %>x <%= item.product_name %> (<%= item.sku %>)</span>
-              <span>Rp <%= number_with_delimiter(item.price.to_i) %></span>
+        <div>
+          <div class="card-header">
+            <span class="order-num">#<%= card.order_number %></span>
+            <div class="badges-row">
+              <span class="urgency-badge urgency-<%= card.sla_urgency %>"><%= card.sla_urgency.tr('_', ' ') %></span>
+              <span class="status-badge status-<%= card.status %>"><%= card.status.tr('_', ' ') %></span>
             </div>
-          <% end %>
+          </div>
+
+          <div style="font-size: 14px; color: var(--text-main); margin-bottom: 4px;">
+            👤 <%= card.buyer_name %>
+          </div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
+            📍 <%= card.shipping_address %>
+          </div>
+
+          <!-- Items Manifest & Warehouse Rack Bin Locations -->
+          <div class="item-list">
+            <% card.items.each_with_index do |item, item_idx| %>
+              <div class="item-row">
+                <div>
+                  <span><%= item.quantity %>x <%= item.product_name %></span>
+                  <div style="margin-top: 2px;">
+                    <span class="bin-badge">Rak A-0<%= (idx % 3) + 1 %>, Bin <%= item_idx + 1 %></span>
+                  </div>
+                </div>
+                <span>Rp <%= number_with_delimiter(item.price.to_i) %></span>
+              </div>
+            <% end %>
+          </div>
         </div>
 
-        <div style="display: flex; gap: 8px; margin-top: 14px;">
+        <!-- Action Buttons Flow -->
+        <div class="actions-group">
+          <% if card.status == 'received' || card.status == 'packing' %>
+            <%= button_to "📦 Mark as Packed", update_status_dashboard_path(card.id, merchant_id: @current_merchant&.id, status: 'packed'), 
+                  method: :patch, 
+                  class: "btn-action btn-success" %>
+          <% end %>
+
+          <% if card.status == 'packed' || card.status == 'dispatched' %>
+            <%= button_to "🛵 Request FleetPulse Pickup", dispatch_fleet_pulse_dashboard_path(card.id, merchant_id: @current_merchant&.id), 
+                  method: :post, 
+                  class: "btn-action btn-fleetpulse" %>
+          <% end %>
+
           <%= link_to "🖨️ Print Label AWB", label_view_dashboard_path(card.id, merchant_id: @current_merchant&.id), 
                 target: "_blank", 
-                class: "btn-action", 
-                style: "text-align: center; text-decoration: none;" %>
+                class: "btn-action" %>
         </div>
-
       </div>
     <% end %>
   <% end %>
