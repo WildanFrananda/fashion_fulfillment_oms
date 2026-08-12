@@ -21,6 +21,8 @@ Rails.application.routes.draw do
   end
   get "/health", to: "health#show"
   get "/orders", to: "orders_dashboard#index"
+  post "/orders/manual_create", to: "orders_dashboard#create_manual_order", as: "manual_create_orders"
+  post "/orders/emergency_halt", to: "orders_dashboard#emergency_halt", as: "emergency_halt_orders"
   get "/fleet_radar", to: "fleet_radar#index", as: "fleet_radar"
   get "/returns", to: "returns_dashboard#index", as: "returns_dashboard"
   get "/inventory", to: "inventory#index", as: "inventory_dashboard"
@@ -28,6 +30,7 @@ Rails.application.routes.draw do
   get "/manifests", to: "manifests#index", as: "manifests_dashboard"
   get "/manifests/handover_pdf", to: "manifests#handover_pdf", as: "handover_pdf_manifests"
   post "/returns/:id/update_status", to: "returns_dashboard#update_status", as: "update_status_returns_dashboard"
+
 
 
 

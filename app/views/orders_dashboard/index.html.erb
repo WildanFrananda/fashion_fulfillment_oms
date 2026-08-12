@@ -1,6 +1,3 @@
-<%= render "shared/navbar" %>
-<%= render "shared/navigation_tabs" %>
-
 <% if flash[:notice].present? %>
   <div class="flash-banner flash-notice">
     <span><%= flash[:notice] %></span>
@@ -13,8 +10,25 @@
   </div>
 <% end %>
 
-<!-- 1. Pipeline Status Stepper Bar -->
-<div class="pipeline-stepper">
+<!-- Top Header Row -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+  <h1 style="font-size: 32px; font-weight: 700; color: #fff; font-family: 'Outfit'; margin: 0;">
+    Order Queue Pipeline
+  </h1>
+
+  <div style="display: flex; gap: 12px; align-items: center;">
+    <button type="button" class="btn-action" style="background: var(--surface-container-high); color: var(--on-surface); border: 1px solid var(--border-highlight); width: auto; padding: 10px 18px;" onclick="alert('Filtering operational queue by SLA urgency & merchant channel.');">
+      <span>⚡ Filter</span>
+    </button>
+
+    <button type="button" class="btn-action" style="background: var(--primary-neon); color: var(--on-primary); width: auto; padding: 10px 20px;" onclick="document.getElementById('manual-order-modal').style.display='flex';">
+      <span>+ New Manual Order</span>
+    </button>
+  </div>
+</div>
+
+<!-- Stepper Pipeline Bar Connected -->
+<div class="pipeline-stepper" style="margin-bottom: 32px;">
   <% 
     status_filter = params[:status_filter].to_s 
     all_cards = @order_cards || []
@@ -23,8 +37,6 @@
     count_packing = all_cards.count { |c| c.status == 'packing' }
     count_packed = all_cards.count { |c| c.status == 'packed' }
     count_dispatched = all_cards.count { |c| c.status == 'dispatched' }
-    count_in_transit = all_cards.count { |c| c.status == 'in_transit' }
-    count_delivered = all_cards.count { |c| c.status == 'delivered' }
 
     filtered_cards = if status_filter.present?
       all_cards.select { |c| c.status == status_filter }
@@ -34,96 +46,187 @@
   %>
 
   <%= link_to orders_path(merchant_id: @current_merchant&.id), class: "step-pill #{'active' if status_filter.empty?}" do %>
-    <span>All Orders</span> <span class="step-count"><%= count_all %></span>
+    <span>All Orders (<%= count_all %>)</span>
   <% end %>
+
+  <div style="color: var(--outline); font-weight: bold; align-self: center;">—</div>
 
   <%= link_to orders_path(merchant_id: @current_merchant&.id, status_filter: 'received'), class: "step-pill #{'active' if status_filter == 'received'}" do %>
-    <span>1. Received</span> <span class="step-count"><%= count_received %></span>
+    <span>1. Received (<%= count_received %>)</span>
   <% end %>
+
+  <div style="color: var(--outline); font-weight: bold; align-self: center;">—</div>
 
   <%= link_to orders_path(merchant_id: @current_merchant&.id, status_filter: 'packing'), class: "step-pill #{'active' if status_filter == 'packing'}" do %>
-    <span>2. Packing</span> <span class="step-count"><%= count_packing %></span>
+    <span>2. Packing (<%= count_packing %>)</span>
   <% end %>
+
+  <div style="color: var(--outline); font-weight: bold; align-self: center;">—</div>
 
   <%= link_to orders_path(merchant_id: @current_merchant&.id, status_filter: 'packed'), class: "step-pill #{'active' if status_filter == 'packed'}" do %>
-    <span>3. Packed</span> <span class="step-count"><%= count_packed %></span>
+    <span>3. Packed (<%= count_packed %>)</span>
   <% end %>
+
+  <div style="color: var(--outline); font-weight: bold; align-self: center;">—</div>
 
   <%= link_to orders_path(merchant_id: @current_merchant&.id, status_filter: 'dispatched'), class: "step-pill #{'active' if status_filter == 'dispatched'}" do %>
-    <span>4. Dispatched</span> <span class="step-count"><%= count_dispatched %></span>
-  <% end %>
-
-  <%= link_to orders_path(merchant_id: @current_merchant&.id, status_filter: 'in_transit'), class: "step-pill #{'active' if status_filter == 'in_transit'}" do %>
-    <span>5. In Transit</span> <span class="step-count"><%= count_in_transit %></span>
-  <% end %>
-
-  <%= link_to orders_path(merchant_id: @current_merchant&.id, status_filter: 'delivered'), class: "step-pill #{'active' if status_filter == 'delivered'}" do %>
-    <span>6. Delivered</span> <span class="step-count"><%= count_delivered %></span>
+    <span>4. Dispatched (<%= count_dispatched %>)</span>
   <% end %>
 </div>
 
-<h2 style="margin-bottom: 20px; font-size: 22px; font-weight: 600;">📦 Warehouse Operational Order Queue</h2>
-
+<!-- Order Cards Grid (3 Columns) -->
 <div class="grid-container" id="order-queue-grid">
   <% if filtered_cards.empty? %>
-    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted);">
-      No orders found for this pipeline stage.
+    <div style="grid-column: 1 / -1; text-align: center; padding: 60px; color: var(--on-surface-variant); background: var(--surface-container); border-radius: 16px; border: 1px solid var(--border-highlight);">
+      No active orders found in this pipeline stage.
     </div>
   <% else %>
     <% filtered_cards.each_with_index do |card, idx| %>
       <div class="order-card" id="order-card-<%= card.id %>">
         <div>
+          <!-- Top Card Meta -->
           <div class="card-header">
-            <span class="order-num">#<%= card.order_number %></span>
+            <div>
+              <span class="order-num" style="font-size: 15px; font-weight: 700; color: #fff;">#<%= card.order_number %></span>
+              <div style="font-size: 11px; color: var(--on-surface-variant); margin-top: 2px;">
+                Today, 09:<%= 10 + (idx * 15) %> AM
+              </div>
+            </div>
             <div class="badges-row">
               <span class="urgency-badge urgency-<%= card.sla_urgency %>"><%= card.sla_urgency.tr('_', ' ') %></span>
               <span class="status-badge status-<%= card.status %>"><%= card.status.tr('_', ' ') %></span>
             </div>
           </div>
 
-          <div style="font-size: 14px; color: var(--text-main); margin-bottom: 4px;">
-            👤 <%= card.buyer_name %>
-          </div>
-          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
-            📍 <%= card.shipping_address %>
+          <!-- Customer Buyer Details Box -->
+          <div style="padding: 12px 0; border-top: 1px solid var(--border-highlight); border-bottom: 1px solid var(--border-highlight); margin-bottom: 12px;">
+            <div style="display: flex; gap: 10px; align-items: flex-start;">
+              <span style="font-size: 16px;">👤</span>
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: #fff;"><%= card.buyer_name %></div>
+                <div style="font-size: 12px; color: var(--on-surface-variant); margin-top: 2px;"><%= card.shipping_address %></div>
+              </div>
+            </div>
           </div>
 
-          <!-- Items Manifest & Warehouse Rack Bin Locations -->
-          <div class="item-list">
-            <% card.items.each_with_index do |item, item_idx| %>
-              <div class="item-row">
-                <div>
-                  <span><%= item.quantity %>x <%= item.product_name %></span>
-                  <div style="margin-top: 2px;">
-                    <span class="bin-badge">Rak A-0<%= (idx % 3) + 1 %>, Bin <%= item_idx + 1 %></span>
+          <!-- Product Manifest Box -->
+          <div>
+            <div style="font-size: 12px; font-weight: 700; color: var(--on-surface-variant); text-transform: uppercase; margin-bottom: 8px;">
+              Manifest
+            </div>
+
+            <div class="item-list" style="background: var(--surface-container-low); border: 1px solid var(--border-highlight); padding: 12px; border-radius: 8px;">
+              <% card.items.each_with_index do |item, item_idx| %>
+                <div style="margin-bottom: 6px;">
+                  <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: #fff;">
+                    <span><%= item.quantity %>x <%= item.product_name %></span>
+                    <span class="tech-code" style="font-size: 11px; color: var(--on-surface-variant);">SKU: <%= item.sku %></span>
+                  </div>
+
+                  <div style="margin-top: 6px; font-size: 11px;">
+                    <% if card.status == 'packed' %>
+                      <span style="color: var(--secondary-emerald); font-weight: bold;">✓ Picked from Rak A-0<%= (idx % 3) + 1 %>, Bin <%= item_idx + 1 %></span>
+                    <% elsif card.status == 'dispatched' || card.status == 'in_transit' %>
+                      <span style="color: var(--tertiary-violet); font-weight: bold;">🚚 Tracking: TRK-99<%= card.id %>-XYZ</span>
+                    <% else %>
+                      <span style="color: var(--secondary-emerald);">📍 Rak A-0<%= (idx % 3) + 1 %>, Bin <%= item_idx + 1 %></span>
+                    <% end %>
                   </div>
                 </div>
-                <span>Rp <%= number_with_delimiter(item.price.to_i) %></span>
-              </div>
-            <% end %>
+              <% end %>
+            </div>
           </div>
         </div>
 
-        <!-- Action Buttons Flow -->
-        <div class="actions-group">
+        <!-- Card Bottom Action Buttons Row -->
+        <div style="margin-top: 16px;">
           <% if card.status == 'received' || card.status == 'packing' %>
-            <%= button_to "📦 Mark as Packed", update_status_dashboard_path(card.id, merchant_id: @current_merchant&.id, status: 'packed'), 
-                  method: :patch, 
-                  class: "btn-action btn-success" %>
-          <% end %>
+            <div style="display: flex; gap: 8px;">
+              <%= button_to update_status_dashboard_path(card.id, merchant_id: @current_merchant&.id, status: 'packed'), 
+                    method: :patch, 
+                    class: "btn-action btn-success", 
+                    style: "flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;" do %>
+                <span>📦 Mark Packed</span>
+              <% end %>
 
-          <% if card.status == 'packed' || card.status == 'dispatched' %>
-            <%= button_to "🛵 Request FleetPulse Pickup", dispatch_fleet_pulse_dashboard_path(card.id, merchant_id: @current_merchant&.id), 
-                  method: :post, 
-                  class: "btn-action btn-fleetpulse" %>
-          <% end %>
+              <%= link_to label_view_dashboard_path(card.id, merchant_id: @current_merchant&.id), 
+                    target: "_blank", 
+                    class: "btn-action", 
+                    style: "width: 44px; padding: 10px; background: var(--surface-container-high); border: 1px solid var(--border-highlight); color: #fff; display: flex; align-items: center; justify-content: center;" do %>
+                <span>🖨️</span>
+              <% end %>
+            </div>
+          <% elsif card.status == 'packed' %>
+            <div style="display: flex; gap: 8px;">
+              <%= button_to dispatch_fleet_pulse_dashboard_path(card.id, merchant_id: @current_merchant&.id), 
+                    method: :post, 
+                    class: "btn-action btn-fleetpulse", 
+                    style: "flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;" do %>
+                <span>🛵 Request Pickup</span>
+              <% end %>
 
-          <%= link_to "🖨️ Print Label AWB", label_view_dashboard_path(card.id, merchant_id: @current_merchant&.id), 
-                target: "_blank", 
-                class: "btn-action", 
-                style: "text-align: center; text-decoration: none;" %>
+              <%= link_to label_view_dashboard_path(card.id, merchant_id: @current_merchant&.id), 
+                    target: "_blank", 
+                    class: "btn-action", 
+                    style: "width: 44px; padding: 10px; background: var(--surface-container-high); border: 1px solid var(--border-highlight); color: #fff; display: flex; align-items: center; justify-content: center;" do %>
+                <span>🖨️</span>
+              <% end %>
+            </div>
+          <% else %>
+            <div>
+              <%= link_to fleet_radar_path(merchant_id: @current_merchant&.id), 
+                    class: "btn-action", 
+                    style: "background: transparent; border: 1px solid var(--border-highlight); color: #fff; display: flex; align-items: center; justify-content: center; gap: 6px;" do %>
+                <span>👁️ Track Driver</span>
+              <% end %>
+            </div>
+          <% end %>
         </div>
       </div>
     <% end %>
   <% end %>
+</div>
+
+<!-- Modal Dialog for + New Manual Order -->
+<div id="manual-order-modal" style="display: none; position: fixed; inset: 0; background: rgba(6, 14, 32, 0.85); backdrop-filter: blur(12px); z-index: 999; align-items: center; justify-content: center;">
+  <div style="background: var(--surface-container); border: 1px solid var(--border-highlight); border-radius: 16px; width: 100%; max-width: 500px; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h3 style="font-size: 20px; font-weight: 700; color: #fff; font-family: 'Outfit';">✨ Create New Manual Order</h3>
+      <span style="font-size: 20px; cursor: pointer; color: var(--on-surface-variant);" onclick="document.getElementById('manual-order-modal').style.display='none';">&times;</span>
+    </div>
+
+    <%= form_with url: manual_create_orders_path(merchant_id: @current_merchant&.id), method: :post, local: true do |f| %>
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 12px; color: var(--on-surface-variant); font-weight: 600; display: block; margin-bottom: 4px;">Buyer Full Name</label>
+        <%= f.text_field :buyer_name, placeholder: "e.g. Sarah Jane", required: true, style: "width: 100%; background: var(--surface-container-low); border: 1px solid var(--border-highlight); padding: 10px; border-radius: 8px; color: #fff;" %>
+      </div>
+
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 12px; color: var(--on-surface-variant); font-weight: 600; display: block; margin-bottom: 4px;">Phone Number</label>
+        <%= f.text_field :buyer_phone, placeholder: "e.g. 0812-3456-7890", required: true, style: "width: 100%; background: var(--surface-container-low); border: 1px solid var(--border-highlight); padding: 10px; border-radius: 8px; color: #fff;" %>
+      </div>
+
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 12px; color: var(--on-surface-variant); font-weight: 600; display: block; margin-bottom: 4px;">Shipping Address</label>
+        <%= f.text_area :shipping_address, placeholder: "e.g. 124 Maple Street, Brooklyn, NY", required: true, rows: 2, style: "width: 100%; background: var(--surface-container-low); border: 1px solid var(--border-highlight); padding: 10px; border-radius: 8px; color: #fff;" %>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+        <div>
+          <label style="font-size: 12px; color: var(--on-surface-variant); font-weight: 600; display: block; margin-bottom: 4px;">Product Name</label>
+          <%= f.text_field :product_name, value: "Premium Silk Hijab (Navy)", style: "width: 100%; background: var(--surface-container-low); border: 1px solid var(--border-highlight); padding: 10px; border-radius: 8px; color: #fff;" %>
+        </div>
+
+        <div>
+          <label style="font-size: 12px; color: var(--on-surface-variant); font-weight: 600; display: block; margin-bottom: 4px;">SKU Code</label>
+          <%= f.text_field :sku, value: "BH-SLK-NVY", style: "width: 100%; background: var(--surface-container-low); border: 1px solid var(--border-highlight); padding: 10px; border-radius: 8px; color: #fff; font-family: monospace;" %>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 12px; justify-content: flex-end;">
+        <button type="button" class="btn-action" style="background: transparent; border: 1px solid var(--border-highlight); color: var(--on-surface-variant); width: auto;" onclick="document.getElementById('manual-order-modal').style.display='none';">Cancel</button>
+        <%= f.submit "Save & Queue Order", class: "btn-action btn-success", style: "width: auto; padding: 10px 24px;" %>
+      </div>
+    <% end %>
+  </div>
 </div>

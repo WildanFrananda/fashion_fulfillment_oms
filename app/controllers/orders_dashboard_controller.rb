@@ -3,13 +3,29 @@
 class OrdersDashboardController < ApplicationController
   extend T::Sig
 
+  class OrderCardItemData < T::Struct
+    const :sku, String
+    const :product_name, String
+    const :quantity, Integer
+    const :price, BigDecimal
+  end
+
+  class OrderCardData < T::Struct
+    const :id, Integer
+    const :order_number, String
+    const :buyer_name, String
+    const :shipping_address, String
+    const :status, String
+    const :sla_urgency, String
+    const :items, T::Array[OrderCardItemData]
+  end
+
   sig { void }
   def index
-    merchants = Merchant.order(:name).to_a
-    @merchants = T.let(merchants, T.nilable(T::Array[Merchant]))
-
     merchant_id_param = params[:merchant_id]
     merchant_repo = T.let(Container[:merchant_repository], MerchantRepositoryInterface)
+    merchants = Merchant.order(:name).to_a
+    @merchants = T.let(merchants, T.nilable(T::Array[Merchant]))
 
     selected_merchant = if merchant_id_param.present?
       merchant_repo.find_by_id(merchant_id_param.to_i)
@@ -47,10 +63,8 @@ class OrdersDashboardController < ApplicationController
     redirect_to orders_path(merchant_id: merchant_id)
   end
 
-
   sig { void }
   def label_view
-
     order_id = params[:id].to_i
     merchant_id_param = params[:merchant_id]
     merchant_id = merchant_id_param.present? ? merchant_id_param.to_i : 1
@@ -108,6 +122,56 @@ class OrdersDashboardController < ApplicationController
 
     redirect_to orders_path(merchant_id: merchant_id)
   end
+
+  sig { void }
+  def create_manual_order
+    merchant_id_param = params[:merchant_id]
+    merchant_id = merchant_id_param.present? ? merchant_id_param.to_i : 1
+
+    buyer_name = params[:buyer_name].to_s.presence || "New Customer"
+    buyer_phone = params[:buyer_phone].to_s.presence || "0812-0000-1111"
+    shipping_address = params[:shipping_address].to_s.presence || "Jl. Sudirman No. 100, Jakarta"
+    product_name = params[:product_name].to_s.presence || "Everyday Silk Hijab"
+    sku = params[:sku].to_s.presence || "BH-SLK-MNL"
+    price = params[:price].present? ? BigDecimal(params[:price].to_s) : BigDecimal("250000")
+
+    item_input = Orders::CreateOrderForm::ItemInput.new(
+      sku: sku,
+      product_name: product_name,
+      quantity: 1,
+      price: price
+    )
+
+    generated_ord_num = "ORD-BH-#{Time.current.to_i.to_s.last(4)}"
+
+    form = Orders::CreateOrderForm.new(
+      order_number: generated_ord_num,
+      buyer_name: buyer_name,
+      buyer_phone: buyer_phone,
+      shipping_address: shipping_address,
+      total_amount: price,
+      items: [item_input]
+    )
+
+    service = T.let(Container[:create_order_service], Orders::CreateOrderService)
+    result = service.call(merchant_id: merchant_id, form: form)
+
+    if result.success?
+      order_data = T.cast(result.data, Orders::CreateOrderService::ResultData)
+      flash[:notice] = "✨ New Manual Order ##{order_data.order_number} successfully created!"
+    else
+      flash[:alert] = "⚠️ Failed to create manual order: #{result.error}"
+    end
+
+    redirect_to orders_path(merchant_id: merchant_id)
+  end
+
+  sig { void }
+  def emergency_halt
+    merchant_id_param = params[:merchant_id]
+    merchant_id = merchant_id_param.present? ? merchant_id_param.to_i : 1
+
+    flash[:alert] = "🚨 WAREHOUSE EMERGENCY HALT ACTIVATED! All automated courier dispatches & picking processes temporarily paused."
+    redirect_to orders_path(merchant_id: merchant_id)
+  end
 end
-
-

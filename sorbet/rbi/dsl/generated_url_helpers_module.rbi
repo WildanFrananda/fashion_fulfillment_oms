@@ -22,6 +22,9 @@ module GeneratedUrlHelpersModule
   def dispatch_fleet_pulse_dashboard_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def emergency_halt_orders_url(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def fleet_radar_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
@@ -41,6 +44,9 @@ module GeneratedUrlHelpersModule
 
   sig { params(args: T.untyped).returns(String) }
   def manifests_dashboard_url(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def manual_create_orders_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def new_rails_conductor_inbound_email_source_url(*args); end
