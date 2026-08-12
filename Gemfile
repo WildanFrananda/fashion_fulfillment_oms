@@ -17,6 +17,8 @@ gem "stimulus-rails"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
 
+gem "faye-websocket"
+
 gem "dry-container"
 gem "dry-auto_inject"
 

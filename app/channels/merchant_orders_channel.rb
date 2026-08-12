@@ -12,4 +12,3 @@ class MerchantOrdersChannel < ApplicationCable::Channel
     stream_from "merchant:orders:#{merchant_id}"
   end
 end
-

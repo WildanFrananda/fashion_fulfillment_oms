@@ -38,3 +38,15 @@ Container.register(:update_return_status_service) do
     return_repository: Container[:return_repository]
   )
 end
+Container.register(:fleet_pulse_websocket_client) do
+  Couriers::FleetPulseWebSocketClient.new(
+    order_repository: Container[:order_repository],
+    update_order_status_service: Container[:update_order_status_service]
+  )
+end
+
+Container.register(:dispatch_fleet_pulse_service) do
+  Couriers::DispatchFleetPulseService.new(
+    order_repository: Container[:order_repository]
+  )
+end
