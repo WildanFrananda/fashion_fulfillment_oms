@@ -58,11 +58,11 @@ class InventoryController < ApplicationController
           low_stock_warning: available < 5
         )
       else
-        rack_num = (idx % 4) + 1
-        bin_num = (idx % 12) + 1
-        bin_loc = "Rak A-0#{rack_num}, Bin #{bin_num}"
+        raw_bin = T.cast(item.read_attribute(:bin_location), T.nilable(String))
+        bin_loc = raw_bin.presence || "Rak A-01, Bin 01"
 
-        initial_physical = 50 + (idx * 15)
+        initial_physical = 100
+
         allocated = qty
         available = initial_physical - allocated
 

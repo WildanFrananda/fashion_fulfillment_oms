@@ -47,10 +47,12 @@ class FleetRadarController < ApplicationController
       lat_offset = (order_id_num % 10) * 0.001
       lng_offset = (order_id_num % 5) * 0.001
 
+      driver_phone_num = order.buyer_phone.presence || "0812-3456-7890"
+
       telemetry_list << DriverTelemetryData.new(
-        driver_name: "FleetPulse Courier ##{order_id_num}",
-        driver_phone: "0812-#{1000 + order_id_num}-5678",
-        vehicle: "FleetPulse Express (B #{1000 + order_id_num} FPE)",
+        driver_name: "FleetPulse Courier (Ref ##{order.order_number})",
+        driver_phone: driver_phone_num,
+        vehicle: "FleetPulse Express",
         order_number: T.must(order.order_number),
         status: T.must(order.status),
         lat: -6.2088 + lat_offset,
@@ -60,6 +62,7 @@ class FleetRadarController < ApplicationController
         dispatch_ref: dispatch_ref
       )
     end
+
 
     @telemetry_items = T.let(telemetry_list, T.nilable(T::Array[DriverTelemetryData]))
     render layout: "dashboard"

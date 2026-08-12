@@ -14,6 +14,8 @@ Guidance for AI coding agents (Claude Code, Cursor, etc.) working in this Ruby o
 - **MANDATORY ENGLISH IN CODEBASE:** All code, variable names, method names, comments, docstrings, and error messages inside the codebase MUST be written in English.
 - **STRICT PROHIBITION OF HARDCODED VALUES:** Hardcoding values (dummy fallback strings, hardcoded IDs/URLs, static mock arrays, hardcoded rack locations) directly inside application code is strictly forbidden. All data MUST be dynamically driven from database records, environment variables, configuration initializers, repositories, or model attributes.
 - **DEMO DATA VIA SEEDER ONLY:** All dummy/demo data required for testing or demonstration MUST be populated strictly through database seeders (`db/seeds.rb`) or FactoryBot factories (`spec/factories/`), NEVER hardcoded directly inside application source code files (`app/`).
+- **STRICT PROHIBITION OF PSEUDO-RANDOM & DUMMY MATH FALLBACKS:** Generating fake metrics using pseudo-random math formulas (e.g. `10 + rand(5)`, `order_id_num % 15`, `idx * 15`) to simulate real metrics or network ping latencies is strictly prohibited. All data MUST be derived from real database records, actual socket/HTTP network executions, or discussed with the user beforehand.
+
 
 
 
