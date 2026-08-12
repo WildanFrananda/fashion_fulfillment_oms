@@ -8,6 +8,10 @@ module ReturnRepositoryInterface
   sig { abstract.params(merchant_id: Integer, id: Integer).returns(T.nilable(Return)) }
   def find_by_id(merchant_id:, id:); end
 
+  sig { abstract.params(merchant_id: Integer).returns(T::Array[Return]) }
+  def find_by_merchant(merchant_id:); end
+
+
   sig { abstract.params(merchant_id: Integer, order_id: Integer).returns(T.nilable(Return)) }
   def find_by_order_id(merchant_id:, order_id:); end
 

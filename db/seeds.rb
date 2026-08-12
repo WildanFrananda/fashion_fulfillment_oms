@@ -1,4 +1,5 @@
 # typed: false
+# db/seeds.rb
 
 puts "🌱 Seeding Fashion Fulfillment OMS demo database..."
 
@@ -51,13 +52,26 @@ order3 = Order.find_or_create_by!(merchant: merchant1, order_number: "ORD-BH-100
   o.buyer_name = "Aisyah Azzahra"
   o.buyer_phone = "083456789012"
   o.shipping_address = "Jl. Raya Bogor KM 25, Depok"
-  o.status = "packed"
+  o.status = "in_transit"
   o.total_amount = 520000.0
   o.same_day_cutoff_at = today + 4.hours # Due Today SLA
 end
 
 if order3.order_items.empty?
   order3.order_items.create!(sku: "MKN-TRV-SLK", product_name: "Mukena Travel Silk Premium Nude", quantity: 1, price: 520000.0)
+end
+
+order3_b = Order.find_or_create_by!(merchant: merchant1, order_number: "ORD-BH-1004") do |o|
+  o.buyer_name = "Rina Anggraini"
+  o.buyer_phone = "081987654321"
+  o.shipping_address = "Jl. Cikini Raya No. 99, Jakarta Pusat"
+  o.status = "dispatched"
+  o.total_amount = 320000.0
+  o.same_day_cutoff_at = today + 2.hours
+end
+
+if order3_b.order_items.empty?
+  order3_b.order_items.create!(sku: "HJB-SLK-SLV", product_name: "Hijab Silk Silver Premium", quantity: 2, price: 160000.0)
 end
 
 # 3. Create Orders for Merchant 2 (Gamis Elegant Style)

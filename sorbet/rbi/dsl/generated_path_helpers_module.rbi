@@ -10,6 +10,9 @@ module GeneratedPathHelpersModule
   include ::ActionDispatch::Routing::PolymorphicRoutes
 
   sig { params(args: T.untyped).returns(String) }
+  def analytics_dashboard_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def api_v1_order_returns_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
@@ -19,7 +22,13 @@ module GeneratedPathHelpersModule
   def dispatch_fleet_pulse_dashboard_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def fleet_radar_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def health_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def inventory_dashboard_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def label_api_v1_order_path(*args); end
@@ -121,6 +130,9 @@ module GeneratedPathHelpersModule
   def rails_storage_redirect_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def returns_dashboard_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def status_api_v1_order_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
@@ -140,4 +152,7 @@ module GeneratedPathHelpersModule
 
   sig { params(args: T.untyped).returns(String) }
   def update_status_dashboard_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def update_status_returns_dashboard_path(*args); end
 end

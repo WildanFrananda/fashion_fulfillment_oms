@@ -1,0 +1,55 @@
+<%= render "shared/navbar" %>
+<%= render "shared/navigation_tabs" %>
+
+<h2 style="margin-bottom: 20px; font-size: 22px; font-weight: 600;">🛵 Active Courier Telemetry Stream</h2>
+
+<div class="grid-container">
+  <% if (@telemetry_items || []).empty? %>
+    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted);">
+      No active drivers currently in transit for this merchant.
+    </div>
+  <% else %>
+    <% (@telemetry_items || []).each do |driver| %>
+      <div class="order-card" style="border-color: rgba(139, 92, 246, 0.4);">
+        <div>
+          <div class="card-header">
+            <span class="order-num">🛵 <%= driver.driver_name %></span>
+            <span class="status-badge status-in_transit"><%= driver.status.tr('_', ' ') %></span>
+          </div>
+
+          <div style="font-size: 13px; color: var(--text-main); margin-bottom: 6px;">
+            🏍️ <strong><%= driver.vehicle %></strong>
+          </div>
+
+          <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">
+            📦 Order Ref: <strong>#<%= driver.order_number %></strong> (<%= driver.dispatch_ref %>)
+          </div>
+
+          <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+            📞 Contact: <strong><%= driver.driver_phone %></strong>
+          </div>
+
+          <!-- Live Telemetry Stats Box -->
+          <div class="item-list" style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(139, 92, 246, 0.3);">
+            <div class="item-row">
+              <span>📍 Coordinates</span>
+              <span style="font-family: monospace; color: #a7f3d0;"><%= driver.lat %>, <%= driver.lng %></span>
+            </div>
+            <div class="item-row">
+              <span>⚡ Live Speed</span>
+              <span style="font-weight: bold; color: #60a5fa;"><%= driver.speed_kmh %> km/h</span>
+            </div>
+            <div class="item-row">
+              <span>⏱️ Estimated Arrival (ETA)</span>
+              <span style="font-weight: bold; color: #fbbf24;"><%= driver.eta_minutes %> Mins</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions-group">
+          <a href="tel:<%= driver.driver_phone %>" class="btn-action btn-fleetpulse">📞 Call Driver Now</a>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+</div>

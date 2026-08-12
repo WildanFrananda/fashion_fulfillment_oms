@@ -12,6 +12,10 @@ Guidance for AI coding agents (Claude Code, Cursor, etc.) working in this Ruby o
 - **MANDATORY PRE-READING:** Before outputting any code solutions in the chat, the agent MUST read `AGENTS.md` and `PRD.md`, and inspect the relevant codebase files first.
 - **MANDATORY STRICT TYPING (`# typed: strict`):** Every application code file inside `app/` MUST start with `# typed: strict` and include full Sorbet `sig` type annotations for all methods. Lower strictness levels (`typed: true`, `typed: false`, `typed: ignore`) are forbidden in `app/`.
 - **MANDATORY ENGLISH IN CODEBASE:** All code, variable names, method names, comments, docstrings, and error messages inside the codebase MUST be written in English.
+- **STRICT PROHIBITION OF HARDCODED VALUES:** Hardcoding values (dummy fallback strings, hardcoded IDs/URLs, static mock arrays, hardcoded rack locations) directly inside application code is strictly forbidden. All data MUST be dynamically driven from database records, environment variables, configuration initializers, repositories, or model attributes.
+- **DEMO DATA VIA SEEDER ONLY:** All dummy/demo data required for testing or demonstration MUST be populated strictly through database seeders (`db/seeds.rb`) or FactoryBot factories (`spec/factories/`), NEVER hardcoded directly inside application source code files (`app/`).
+
+
 
 
 ---

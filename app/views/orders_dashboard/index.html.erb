@@ -1,24 +1,5 @@
-<div class="navbar">
-  <div class="brand-title">
-    <span>🏬 Fashion Fulfillment OMS</span>
-    <span class="brand-badge"><%= @current_merchant ? @current_merchant.name : "Select Merchant" %></span>
-  </div>
-
-  <div style="display: flex; align-items: center; gap: 20px;">
-    <div class="live-status">
-      <div class="pulse-dot"></div>
-      <span>Action Cable WebSocket Live Streaming Active</span>
-    </div>
-
-    <%= form_with url: "/orders", method: :get, local: true, style: "display: inline-block;" do |f| %>
-      <%= f.select :merchant_id, 
-            options_from_collection_for_select(@merchants || [], :id, :name, @current_merchant&.id), 
-            {}, 
-            class: "merchant-select", 
-            onchange: "this.form.submit()" %>
-    <% end %>
-  </div>
-</div>
+<%= render "shared/navbar" %>
+<%= render "shared/navigation_tabs" %>
 
 <% if flash[:notice].present? %>
   <div class="flash-banner flash-notice">
@@ -139,7 +120,8 @@
 
           <%= link_to "🖨️ Print Label AWB", label_view_dashboard_path(card.id, merchant_id: @current_merchant&.id), 
                 target: "_blank", 
-                class: "btn-action" %>
+                class: "btn-action", 
+                style: "text-align: center; text-decoration: none;" %>
         </div>
       </div>
     <% end %>

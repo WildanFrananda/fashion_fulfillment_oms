@@ -14,6 +14,12 @@ class ReturnRepository < BaseRepository
     T.cast(model.find_by(merchant_id: merchant_id, id: id), T.nilable(Return))
   end
 
+  sig { override.params(merchant_id: Integer).returns(T::Array[Return]) }
+  def find_by_merchant(merchant_id:)
+    T.cast(model.where(merchant_id: merchant_id).order(created_at: :desc).to_a, T::Array[Return])
+  end
+
+
   sig { override.params(merchant_id: Integer, order_id: Integer).returns(T.nilable(Return)) }
   def find_by_order_id(merchant_id:, order_id:)
     T.cast(model.find_by(merchant_id: merchant_id, order_id: order_id), T.nilable(Return))
