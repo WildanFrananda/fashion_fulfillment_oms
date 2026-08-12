@@ -112,7 +112,7 @@ module GeneratedPathHelpersModule
   def status_api_v1_order_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def status_api_v1_returns_path(*args); end
+  def status_api_v1_return_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def turbo_recede_historical_location_path(*args); end

@@ -60,12 +60,17 @@ group :development, :test do
   gem "rubocop-rails-omakase", require: false
 end
 
-group :development, :test do
-  # Use console on exceptions pages [https://github.com/rails/web-console]
+group :development do
   gem "web-console"
+end
+
+group :development, :test do
   gem "tapioca", require: false
   gem "ruby-lsp", require: false
+  gem "rspec-rails", "~> 7.0"
+  gem "factory_bot_rails"
 end
+
 
 group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]

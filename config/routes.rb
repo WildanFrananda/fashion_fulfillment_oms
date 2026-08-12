@@ -12,11 +12,12 @@ Rails.application.routes.draw do
         resource :returns, only: [ :create ], controller: "returns"
       end
 
-      resource :returns, only: [] do
+      resources :returns, only: [] do
         member do
           patch :status, to: "returns#update_status"
         end
       end
+
     end
   end
   get "up" => "rails/health#show", as: :rails_health_check

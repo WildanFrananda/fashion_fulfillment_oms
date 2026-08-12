@@ -12,8 +12,9 @@ class BaseService
 
     sig { returns(T::Boolean) }
     def success?
-      success?
+      success
     end
+
 
     sig { returns(T::Boolean) }
     def failure?

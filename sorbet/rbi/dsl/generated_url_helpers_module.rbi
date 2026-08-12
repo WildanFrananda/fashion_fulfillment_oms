@@ -112,7 +112,7 @@ module GeneratedUrlHelpersModule
   def status_api_v1_order_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
-  def status_api_v1_returns_url(*args); end
+  def status_api_v1_return_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def turbo_recede_historical_location_url(*args); end
