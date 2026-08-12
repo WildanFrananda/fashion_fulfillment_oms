@@ -25,6 +25,9 @@ module GeneratedPathHelpersModule
   def fleet_radar_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def handover_pdf_manifests_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def health_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
@@ -35,6 +38,9 @@ module GeneratedPathHelpersModule
 
   sig { params(args: T.untyped).returns(String) }
   def label_view_dashboard_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def manifests_dashboard_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def new_rails_conductor_inbound_email_path(*args); end

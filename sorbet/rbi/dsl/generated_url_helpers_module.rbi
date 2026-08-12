@@ -25,6 +25,9 @@ module GeneratedUrlHelpersModule
   def fleet_radar_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def handover_pdf_manifests_url(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def health_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
@@ -35,6 +38,9 @@ module GeneratedUrlHelpersModule
 
   sig { params(args: T.untyped).returns(String) }
   def label_view_dashboard_url(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def manifests_dashboard_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def new_rails_conductor_inbound_email_source_url(*args); end

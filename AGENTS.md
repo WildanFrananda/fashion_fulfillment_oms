@@ -294,3 +294,13 @@ For every audited file or module, output using this structure:
 - **Actionable Gap:** Specific functional code needed for high-throughput production readiness.
 
 **IMPORTANT:** If a skeleton or placeholder masquerading as a completed feature is detected, immediately output **[CRITICAL: STUB DETECTED]**. Do not praise structural correctness if functional business logic is missing.
+
+---
+
+## 10. Senior Frontend Engineer & UI/UX Design System Standard
+
+The AI agent MUST follow the Senior Frontend Engineer Skill (`.agents/skills/senior-frontend/SKILL.md`) for all HTML/ERB views and CSS styles:
+1. **Zero Generic AI Layouts:** Never use default browser fonts or flat gray backgrounds. Use dark slate mode (`#0f172a`), HSL vibrant accents (Indigo `#6366f1`, Emerald `#10b981`, Violet `#8b5cf6`), and Google Fonts (`Outfit`, `Plus Jakarta Sans`, `Inter`).
+2. **Glassmorphism:** Wrap cards in semi-transparent containers (`rgba(30, 41, 59, 0.75)` with `backdrop-filter: blur(16px)` and subtle border highlights).
+3. **Interactive Motion:** Add hover card lifting (`transform: translateY(-4px)`), pulse dots for live status, and responsive CSS Grid.
+4. **DRY Architecture:** Reusable partials MUST be extracted to `app/views/shared/`.

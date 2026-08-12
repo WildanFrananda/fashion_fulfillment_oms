@@ -25,7 +25,10 @@ Rails.application.routes.draw do
   get "/returns", to: "returns_dashboard#index", as: "returns_dashboard"
   get "/inventory", to: "inventory#index", as: "inventory_dashboard"
   get "/analytics", to: "analytics#index", as: "analytics_dashboard"
+  get "/manifests", to: "manifests#index", as: "manifests_dashboard"
+  get "/manifests/handover_pdf", to: "manifests#handover_pdf", as: "handover_pdf_manifests"
   post "/returns/:id/update_status", to: "returns_dashboard#update_status", as: "update_status_returns_dashboard"
+
 
 
   post "/orders/:id/print_label", to: "orders_dashboard#print_label", as: "print_label_dashboard"
