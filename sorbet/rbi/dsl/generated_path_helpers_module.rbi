@@ -16,6 +16,9 @@ module GeneratedPathHelpersModule
   def api_v1_orders_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def health_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def label_api_v1_order_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
@@ -56,9 +59,6 @@ module GeneratedPathHelpersModule
 
   sig { params(args: T.untyped).returns(String) }
   def rails_disk_service_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def rails_health_check_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def rails_info_notes_path(*args); end

@@ -1,0 +1,154 @@
+openapi: 3.0.3
+info:
+  title: Fashion Fulfillment OMS API
+  description: Order Management System for Local Muslim Fashion Brands
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api/v1
+paths:
+  /orders:
+    post:
+      summary: Ingest new order from external storefront
+      parameters:
+        - in: header
+          name: X-Merchant-Api-Key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [order_number, buyer_name, shipping_address, total_amount, items]
+              properties:
+                order_number: { type: string }
+                buyer_name: { type: string }
+                buyer_phone: { type: string }
+                shipping_address: { type: string }
+                total_amount: { type: number }
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [sku, product_name, quantity, price]
+                    properties:
+                      sku: { type: string }
+                      product_name: { type: string }
+                      quantity: { type: integer }
+                      price: { type: number }
+      responses:
+        '201':
+          description: Order created successfully
+        '401':
+          description: Unauthorized API key
+        '422':
+          description: Validation failure
+  /orders/queue:
+    get:
+      summary: Fetch warehouse order fulfillment queue sorted by SLA urgency
+      parameters:
+        - in: header
+          name: X-Merchant-Api-Key
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of queued orders
+  /orders/{id}/status:
+    patch:
+      summary: Update order fulfillment status and broadcast real-time update
+      parameters:
+        - in: header
+          name: X-Merchant-Api-Key
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [received, packing, packed, picked_up, delivered] }
+      responses:
+        '200':
+          description: Order status updated
+  /orders/{id}/label:
+    post:
+      summary: Generate AWB shipping label
+      parameters:
+        - in: header
+          name: X-Merchant-Api-Key
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Shipping label generated
+  /orders/{order_id}/returns:
+    post:
+      summary: Initiate return or size exchange request
+      parameters:
+        - in: header
+          name: X-Merchant-Api-Key
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: order_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string }
+      responses:
+        '201':
+          description: Return request initiated
+  /returns/{id}/status:
+    patch:
+      summary: Update return request status
+      parameters:
+        - in: header
+          name: X-Merchant-Api-Key
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [requested, picked_up_from_buyer, received_at_warehouse, inspected, resolved] }
+      responses:
+        '200':
+          description: Return status updated

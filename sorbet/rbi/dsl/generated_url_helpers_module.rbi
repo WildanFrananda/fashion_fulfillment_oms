@@ -16,6 +16,9 @@ module GeneratedUrlHelpersModule
   def api_v1_orders_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def health_url(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def label_api_v1_order_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
@@ -56,9 +59,6 @@ module GeneratedUrlHelpersModule
 
   sig { params(args: T.untyped).returns(String) }
   def rails_disk_service_url(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def rails_health_check_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def rails_info_notes_url(*args); end
