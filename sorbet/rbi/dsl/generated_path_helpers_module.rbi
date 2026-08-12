@@ -19,6 +19,9 @@ module GeneratedPathHelpersModule
   def api_v1_orders_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def create_ticket_support_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def dispatch_fleet_pulse_dashboard_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
@@ -142,13 +145,28 @@ module GeneratedPathHelpersModule
   def rails_storage_redirect_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def regenerate_api_key_settings_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def returns_dashboard_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def settings_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def start_chat_support_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def status_api_v1_order_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def status_api_v1_return_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def support_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def test_ping_settings_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def turbo_recede_historical_location_path(*args); end
@@ -160,11 +178,11 @@ module GeneratedPathHelpersModule
   def turbo_resume_historical_location_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def update_cutoff_settings_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def update_rails_disk_service_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def update_status_dashboard_path(*args); end
-
-  sig { params(args: T.untyped).returns(String) }
-  def update_status_returns_dashboard_path(*args); end
 end

@@ -151,24 +151,34 @@
         <% end %>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--on-surface-variant); padding-left: 8px; margin-bottom: 16px;">
-        <div style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+      <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;">
+        <%= link_to settings_path(merchant_id: @current_merchant&.id), class: "nav-item #{'active' if current_page?(settings_path)}" do %>
           <span>⚙️</span> <span>Settings</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+        <% end %>
+
+        <%= link_to support_path(merchant_id: @current_merchant&.id), class: "nav-item #{'active' if current_page?(support_path)}" do %>
           <span>❓</span> <span>Support</span>
+        <% end %>
+
+      </div>
+
+
+      <% 
+        staff = StaffUser.find_by(merchant_id: @current_merchant&.id) || StaffUser.first
+        staff_name = staff ? staff.name : "Warehouse Officer"
+        staff_role = staff ? staff.role : "Fulfillment Specialist"
+        initials = staff_name.split.map(&:first).join.first(2).upcase
+      %>
+      <div style="display: flex; align-items: center; gap: 10px; padding-top: 12px; border-top: 1px solid var(--border-highlight);">
+        <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #8083ff, #a078ff); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; color: #fff;">
+          <%= initials %>
+        </div>
+        <div>
+          <div style="font-size: 13px; font-weight: 700; color: #fff;"><%= staff_name %></div>
+          <div style="font-size: 11px; color: var(--on-surface-variant);"><%= staff_role %></div>
         </div>
       </div>
 
-      <div style="display: flex; align-items: center; gap: 10px; padding-top: 12px; border-top: 1px solid var(--border-highlight);">
-        <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #8083ff, #a078ff); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; color: #fff;">
-          WM
-        </div>
-        <div>
-          <div style="font-size: 13px; font-weight: 700; color: #fff;">Warehouse Manager</div>
-          <div style="font-size: 11px; color: var(--on-surface-variant);">North Region Terminal</div>
-        </div>
-      </div>
     </div>
   </aside>
 

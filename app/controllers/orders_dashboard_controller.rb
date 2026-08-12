@@ -8,7 +8,9 @@ class OrdersDashboardController < ApplicationController
     const :product_name, String
     const :quantity, Integer
     const :price, BigDecimal
+    const :bin_location, String
   end
+
 
   class OrderCardData < T::Struct
     const :id, Integer
@@ -127,13 +129,17 @@ class OrdersDashboardController < ApplicationController
   def create_manual_order
     merchant_id_param = params[:merchant_id]
     merchant_id = merchant_id_param.present? ? merchant_id_param.to_i : 1
+    merchant_repo = T.let(Container[:merchant_repository], MerchantRepositoryInterface)
+    merchant = merchant_repo.find_by_id(merchant_id)
+    merchant_code = merchant ? merchant.code : "BH"
 
-    buyer_name = params[:buyer_name].to_s.presence || "New Customer"
-    buyer_phone = params[:buyer_phone].to_s.presence || "0812-0000-1111"
-    shipping_address = params[:shipping_address].to_s.presence || "Jl. Sudirman No. 100, Jakarta"
-    product_name = params[:product_name].to_s.presence || "Everyday Silk Hijab"
-    sku = params[:sku].to_s.presence || "BH-SLK-MNL"
-    price = params[:price].present? ? BigDecimal(params[:price].to_s) : BigDecimal("250000")
+
+    buyer_name = params[:buyer_name].to_s.strip
+    buyer_phone = params[:buyer_phone].to_s.strip
+    shipping_address = params[:shipping_address].to_s.strip
+    product_name = params[:product_name].to_s.strip
+    sku = params[:sku].to_s.strip
+    price = params[:price].present? ? BigDecimal(params[:price].to_s) : BigDecimal("150000")
 
     item_input = Orders::CreateOrderForm::ItemInput.new(
       sku: sku,
@@ -142,7 +148,8 @@ class OrdersDashboardController < ApplicationController
       price: price
     )
 
-    generated_ord_num = "ORD-BH-#{Time.current.to_i.to_s.last(4)}"
+    generated_ord_num = "ORD-#{merchant_code}-#{Time.current.to_i.to_s.last(4)}"
+
 
     form = Orders::CreateOrderForm.new(
       order_number: generated_ord_num,

@@ -9,6 +9,7 @@ module Orders
       const :product_name, String
       const :quantity, Integer
       const :price, BigDecimal
+      const :bin_location, String
     end
 
     class OrderCardData < T::Struct
@@ -18,6 +19,8 @@ module Orders
       const :buyer_name, String
       const :shipping_address, String
       const :same_day_cutoff_at, T.any(Time, ActiveSupport::TimeWithZone)
+      const :created_at, T.any(Time, ActiveSupport::TimeWithZone)
+      const :tracking_number, T.nilable(String)
       const :sla_urgency, String
       const :items, T::Array[OrderItemData]
     end
@@ -40,16 +43,26 @@ module Orders
 
       result_cards = orders.map do |order|
         cutoff = T.must(order.same_day_cutoff_at)
+        created_at_time = order.created_at
         urgency = compute_sla_urgency(cutoff: cutoff, now: now)
 
+        label = ShippingLabel.find_by(order_id: order.id)
+        tracking_num = label ? label.awb_number : nil
+
         items_data = order.order_items.map do |item|
+          raw_bin = T.cast(item.read_attribute(:bin_location), T.nilable(String))
+          bin_loc = raw_bin.presence || "Rak A-01, Bin 01"
+
           OrderItemData.new(
             sku: T.must(item.sku),
             product_name: T.must(item.product_name),
             quantity: T.must(item.quantity),
-            price: BigDecimal(T.must(item.price).to_s)
+            price: BigDecimal(T.must(item.price).to_s),
+            bin_location: bin_loc
           )
         end
+
+
 
         OrderCardData.new(
           id: order.id,
@@ -58,6 +71,8 @@ module Orders
           buyer_name: T.must(order.buyer_name),
           shipping_address: T.must(order.shipping_address),
           same_day_cutoff_at: cutoff,
+          created_at: created_at_time,
+          tracking_number: tracking_num,
           sla_urgency: urgency,
           items: items_data
         )

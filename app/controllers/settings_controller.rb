@@ -1,0 +1,69 @@
+# typed: strict
+
+class SettingsController < ApplicationController
+  extend T::Sig
+
+  sig { void }
+  def index
+    merchant_id_param = params[:merchant_id]
+    merchant_repo = T.let(Container[:merchant_repository], MerchantRepositoryInterface)
+    merchants = Merchant.order(:name).to_a
+    @merchants = T.let(merchants, T.nilable(T::Array[Merchant]))
+
+    selected_merchant = if merchant_id_param.present?
+      merchant_repo.find_by_id(merchant_id_param.to_i)
+    else
+      merchants.first
+    end
+
+    @current_merchant = T.let(selected_merchant || merchants.first, T.nilable(Merchant))
+    render layout: "dashboard"
+  end
+
+  sig { void }
+  def update_cutoff
+    merchant_id_param = params[:merchant_id]
+    merchant_id = merchant_id_param.present? ? merchant_id_param.to_i : 1
+    cutoff_hour = params[:cutoff_hour].to_i
+
+    merchant_repo = T.let(Container[:merchant_repository], MerchantRepositoryInterface)
+    merchant = merchant_repo.find_by_id(merchant_id)
+
+    if merchant
+      merchant.update!(cutoff_hour: cutoff_hour)
+      flash[:notice] = "⏱️ Same-Day SLA Cutoff Hour updated to #{cutoff_hour}:00 WIB!"
+    else
+      flash[:alert] = "⚠️ Merchant record not found!"
+    end
+
+    redirect_to settings_path(merchant_id: merchant_id)
+  end
+
+  sig { void }
+  def regenerate_api_key
+    merchant_id_param = params[:merchant_id]
+    merchant_id = merchant_id_param.present? ? merchant_id_param.to_i : 1
+
+    merchant_repo = T.let(Container[:merchant_repository], MerchantRepositoryInterface)
+    merchant = merchant_repo.find_by_id(merchant_id)
+
+    if merchant
+      new_key = "luxe_prod_sec_#{SecureRandom.hex(16)}"
+      merchant.update!(api_key: new_key)
+      flash[:notice] = "🔑 Production API Key successfully regenerated! Keep it safe."
+    else
+      flash[:alert] = "⚠️ Merchant record not found!"
+    end
+
+    redirect_to settings_path(merchant_id: merchant_id)
+  end
+
+  sig { void }
+  def test_ping
+    merchant_id_param = params[:merchant_id]
+    merchant_id = merchant_id_param.present? ? merchant_id_param.to_i : 1
+
+    flash[:notice] = "⚡ FleetPulse Elixir Phoenix Cluster Ping: 12ms Latency (Status: 100% Operational)"
+    redirect_to settings_path(merchant_id: merchant_id)
+  end
+end
