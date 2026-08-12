@@ -18,6 +18,8 @@ gem "stimulus-rails"
 gem "jbuilder"
 
 gem "faye-websocket"
+gem "barby"
+
 
 gem "dry-container"
 gem "dry-auto_inject"

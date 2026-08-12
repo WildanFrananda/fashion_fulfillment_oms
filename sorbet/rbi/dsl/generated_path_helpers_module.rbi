@@ -16,16 +16,28 @@ module GeneratedPathHelpersModule
   def api_v1_orders_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def dispatch_fleet_pulse_dashboard_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def health_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def label_api_v1_order_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def label_view_dashboard_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def new_rails_conductor_inbound_email_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def new_rails_conductor_inbound_email_source_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def orders_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def print_label_dashboard_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def queue_api_v1_orders_path(*args); end
@@ -125,4 +137,7 @@ module GeneratedPathHelpersModule
 
   sig { params(args: T.untyped).returns(String) }
   def update_rails_disk_service_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def update_status_dashboard_path(*args); end
 end

@@ -16,16 +16,28 @@ module GeneratedUrlHelpersModule
   def api_v1_orders_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def dispatch_fleet_pulse_dashboard_url(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def health_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def label_api_v1_order_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def label_view_dashboard_url(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def new_rails_conductor_inbound_email_source_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def new_rails_conductor_inbound_email_url(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def orders_url(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def print_label_dashboard_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
   def queue_api_v1_orders_url(*args); end
@@ -125,4 +137,7 @@ module GeneratedUrlHelpersModule
 
   sig { params(args: T.untyped).returns(String) }
   def update_rails_disk_service_url(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def update_status_dashboard_url(*args); end
 end

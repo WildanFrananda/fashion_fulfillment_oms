@@ -7,8 +7,8 @@ module Api
 
       sig { void }
       def create
-        api_key_header = request.headers["X-Merchant-Api-Key"]
-        api_key = api_key_header.is_a?(String) ? api_key_header : params[:api_key].to_s
+        header = request.headers["X-Merchant-Api-Key"].to_s.strip
+        api_key = header.empty? ? params[:api_key].to_s : header
         return render json: { error: "Unauthorized: Missing API Key" }, status: :unauthorized if api_key.empty?
 
         merchant_repo = T.let(Container[:merchant_repository], MerchantRepositoryInterface)
@@ -32,12 +32,13 @@ module Api
 
       sig { void }
       def update_status
-        api_key_header = request.headers["X-Merchant-Api-Key"]
-        api_key = api_key_header.is_a?(String) ? api_key_header : params[:api_key].to_s
+        header = request.headers["X-Merchant-Api-Key"].to_s.strip
+        api_key = header.empty? ? params[:api_key].to_s : header
         return render json: { error: "Unauthorized: Missing API Key" }, status: :unauthorized if api_key.empty?
 
         merchant_repo = T.let(Container[:merchant_repository], MerchantRepositoryInterface)
         merchant = merchant_repo.find_by_api_key(api_key)
+
         return render json: { error: "Unauthorized: Invalid API Key" }, status: :unauthorized unless merchant
 
         service = T.let(Container[:update_return_status_service], Returns::UpdateReturnStatusService)
