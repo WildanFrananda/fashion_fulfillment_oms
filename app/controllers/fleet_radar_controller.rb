@@ -23,13 +23,11 @@ class FleetRadarController < ApplicationController
     merchants = Merchant.order(:name).to_a
     @merchants = T.let(merchants, T.nilable(T::Array[Merchant]))
 
-    selected_merchant = if merchant_id_param.present?
-      merchant_repo.find_by_id(merchant_id_param.to_i)
-    else
-      merchants.first
-    end
+    merchant_id = active_merchant_id
+    selected_merchant = merchant_repo.find_by_id(merchant_id)
 
     @current_merchant = T.let(selected_merchant || merchants.first, T.nilable(Merchant))
+
     current = @current_merchant
     merchant_id = current ? current.id : 1
 

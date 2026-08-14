@@ -15,6 +15,15 @@ Guidance for AI coding agents (Claude Code, Cursor, etc.) working in this Ruby o
 - **STRICT PROHIBITION OF HARDCODED VALUES:** Hardcoding values (dummy fallback strings, hardcoded IDs/URLs, static mock arrays, hardcoded rack locations) directly inside application code is strictly forbidden. All data MUST be dynamically driven from database records, environment variables, configuration initializers, repositories, or model attributes.
 - **DEMO DATA VIA SEEDER ONLY:** All dummy/demo data required for testing or demonstration MUST be populated strictly through database seeders (`db/seeds.rb`) or FactoryBot factories (`spec/factories/`), NEVER hardcoded directly inside application source code files (`app/`).
 - **STRICT PROHIBITION OF PSEUDO-RANDOM & DUMMY MATH FALLBACKS:** Generating fake metrics using pseudo-random math formulas (e.g. `10 + rand(5)`, `order_id_num % 15`, `idx * 15`) to simulate real metrics or network ping latencies is strictly prohibited. All data MUST be derived from real database records, actual socket/HTTP network executions, or discussed with the user beforehand.
+- **MANDATORY TEST PYRAMID FOR ALL FEATURES:** Every new feature or feature modification MUST be accompanied by a complete Test Pyramid test suite in RSpec: Unit Tests (`spec/services/`, `spec/repositories/`), Request/Controller Specs (`spec/requests/`), and System/Feature Specs.
+- **MANDATORY PRE-ALIGNMENT BEFORE EXECUTION:** The AI agent MUST NOT immediately build, edit, or create files when receiving a request. The agent MUST ALWAYS ask the user for clarification, design alignment, and explicit confirmation FIRST before outputting code or executing tasks.
+- **MANDATORY FOLLOW-UP QUESTIONS & ITERATIVE ALIGNMENT:** If the user's response or requirements contain any ambiguity, underspecified details, or potential edge cases, the AI agent MUST ask follow-up questions to resolve all ambiguities before executing any code.
+- **STRICT PROHIBITION OF FAKE/SKELETON FEATURES (NO FAKE FEATURES):** The AI agent is strictly forbidden from creating fake, decorative, or useless skeleton implementations. Every feature MUST be engineered for real production execution using actual browser/system APIs, real network sockets, and real database mutations.
+- **MANDATORY TECHNICAL & ARCHITECTURAL INTERVIEW:** Before building any feature, the AI agent MUST carefully plan the real execution flow and interview/ask the user regarding the real execution hardware/APIs, code structure, clean code design patterns, and domain preferences to align 100% with the user's wishes.
+
+
+
+
 
 
 

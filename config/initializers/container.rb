@@ -50,3 +50,10 @@ Container.register(:dispatch_fleet_pulse_service) do
     order_repository: Container[:order_repository]
   )
 end
+
+Container.register(:verify_scan_barcode_service) do
+  Orders::VerifyScanBarcodeService.new(
+    order_repository: Container[:order_repository]
+  )
+end
+

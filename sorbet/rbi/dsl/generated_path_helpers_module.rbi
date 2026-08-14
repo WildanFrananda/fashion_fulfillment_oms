@@ -46,6 +46,12 @@ module GeneratedPathHelpersModule
   def label_view_dashboard_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def login_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def logout_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def manifests_dashboard_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
@@ -151,6 +157,9 @@ module GeneratedPathHelpersModule
   def returns_dashboard_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def scanner_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def settings_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
@@ -185,4 +194,7 @@ module GeneratedPathHelpersModule
 
   sig { params(args: T.untyped).returns(String) }
   def update_status_dashboard_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def verify_scan_path(*args); end
 end

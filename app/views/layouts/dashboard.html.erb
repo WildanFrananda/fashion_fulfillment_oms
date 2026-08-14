@@ -169,15 +169,22 @@
         staff_role = staff ? staff.role : "Fulfillment Specialist"
         initials = staff_name.split.map(&:first).join.first(2).upcase
       %>
-      <div style="display: flex; align-items: center; gap: 10px; padding-top: 12px; border-top: 1px solid var(--border-highlight);">
-        <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #8083ff, #a078ff); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; color: #fff;">
-          <%= initials %>
+      <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--border-highlight);">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #8083ff, #a078ff); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; color: #fff;">
+            <%= initials %>
+          </div>
+          <div>
+            <div style="font-size: 13px; font-weight: 700; color: #fff;"><%= staff_name %></div>
+            <div style="font-size: 11px; color: var(--on-surface-variant);"><%= staff_role %></div>
+          </div>
         </div>
-        <div>
-          <div style="font-size: 13px; font-weight: 700; color: #fff;"><%= staff_name %></div>
-          <div style="font-size: 11px; color: var(--on-surface-variant);"><%= staff_role %></div>
-        </div>
+
+        <%= button_to logout_path, method: :delete, style: "background: transparent; border: none; color: var(--on-surface-variant); cursor: pointer; font-size: 14px;", title: "Sign Out" do %>
+          <span>🚪</span>
+        <% end %>
       </div>
+
 
     </div>
   </aside>

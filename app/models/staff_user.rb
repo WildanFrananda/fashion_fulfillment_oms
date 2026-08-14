@@ -1,7 +1,10 @@
 # typed: strict
+require "bcrypt"
 
 class StaffUser < ApplicationRecord
   extend T::Sig
+
+  has_secure_password validations: false
 
   belongs_to :merchant
 

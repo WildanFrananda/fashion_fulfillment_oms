@@ -1,129 +1,124 @@
 # typed: false
 # db/seeds.rb
 
-puts "🌱 Seeding Fashion Fulfillment OMS demo database..."
+puts "🌱 Clearing old records and seeding Fashion Fulfillment OMS with Logic-Driven Seeder..."
 
-# 1. Create Merchants
-merchant1 = Merchant.find_or_create_by!(code: "BH-001") do |m|
-  m.name = "Boutique Hijab Premium"
-  m.api_key = "secret-api-key-merchant-1"
-  m.cutoff_hour = 14
+# 1. Clean Database (Reset old data)
+# -------------------------------------------------------------
+OrderItem.destroy_all
+ShippingLabel.destroy_all
+Return.destroy_all
+Order.destroy_all
+StaffUser.destroy_all
+Merchant.destroy_all
+
+MERCHANTS_DATA = [
+  { code: "BH-001", name: "Boutique Hijab Premium", cutoff_hour: 14, manager_name: "Budi Hendra", manager_email: "budi@boutiquehijab.id", role: "Warehouse Lead Manager" },
+  { code: "GES-002", name: "Gamis Elegant Style", cutoff_hour: 15, manager_name: "Siti Nurhaliza", manager_email: "siti@gamiselegant.id", role: "Fulfillment Logistics Manager" }
+].freeze
+
+CATALOG_ITEMS = [
+  { sku: "BH-SLK-NVY", name: "Premium Silk Hijab (Navy)", price: 350000.0, rack: "A", bin: 12 },
+  { sku: "HJB-PSH-BLK", name: "Hijab Pashmina Silk Black", price: 100000.0, rack: "A", bin: 13 },
+  { sku: "BH-CTN-BLK", name: "Everyday Cotton Hijab (Black)", price: 140000.0, rack: "B", bin: 5 },
+  { sku: "BH-CHF-EMR", name: "Chiffon Evening Wrap (Emerald)", price: 520000.0, rack: "C", bin: 8 },
+  { sku: "HJB-SLK-SLV", name: "Hijab Silk Silver Premium", price: 160000.0, rack: "A", bin: 1 },
+  { sku: "GMS-EMR-XL", name: "Gamis Velvet Emerald XL", price: 680000.0, rack: "D", bin: 1 },
+  { sku: "KKO-MDR-M", name: "Koko Modern Slim Fit M", price: 390000.0, rack: "E", bin: 10 }
+].freeze
+
+BUYER_PERSONAS = [
+  { name: "Sarah Jane", phone: "081234567890", address: "124 Maple Street, Apt 4B, Brooklyn, NY 11201" },
+  { name: "Michael Chen", phone: "082345678901", address: "789 Pine Road, Suite 200, Seattle, WA 98101" },
+  { name: "Emma Watson", phone: "083456789012", address: "456 Oak Lane, Austin, TX 78701" },
+  { name: "Rina Anggraini", phone: "081987654321", address: "Jl. Cikini Raya No. 99, Jakarta Pusat" },
+  { name: "Anisa Fitri", phone: "084567890123", address: "Jl. Malioboro No. 88, Yogyakarta" },
+  { name: "Dewi Sartika", phone: "085678901234", address: "Jl. Pemuda No. 101, Surabaya" }
+].freeze
+
+STATUS_PIPELINE = ["received", "packing", "packed", "dispatched", "in_transit", "delivered"].freeze
+
+# 2. Logic Step: Seed Merchants & Staff Users
+# -------------------------------------------------------------
+created_merchants = MERCHANTS_DATA.map do |data|
+  merchant = Merchant.create!(
+    code: data[:code],
+    name: data[:name],
+    api_key: "luxe_prod_sec_#{Digest::SHA256.hexdigest(data[:code]).first(16)}",
+    cutoff_hour: data[:cutoff_hour]
+  )
+
+  StaffUser.create!(
+    merchant: merchant,
+    email: data[:manager_email],
+    name: data[:manager_name],
+    role: data[:role],
+    password: "secret123"
+  )
+
+
+  merchant
 end
 
-merchant2 = Merchant.find_or_create_by!(code: "GES-002") do |m|
-  m.name = "Gamis Elegant Style"
-  m.api_key = "secret-api-key-merchant-2"
-  m.cutoff_hour = 15
+puts "✅ #{created_merchants.size} Merchants and Staff Users seeded."
+
+# 3. Logic Step: Seed Orders with Item Matrix & Dynamic Calculation
+# -------------------------------------------------------------
+now = Time.current
+
+created_merchants.each_with_index do |merchant, m_idx|
+  merchant_catalog = m_idx.zero? ? CATALOG_ITEMS.take(5) : CATALOG_ITEMS.drop(4)
+  sla_cutoff_offsets = [-1.hour, 30.minutes, 4.hours, 2.hours, -2.hours]
+
+  BUYER_PERSONAS.each_with_index do |buyer, b_idx|
+    order_num_seq = 1000 + b_idx + (m_idx * 100)
+    order_number = "ORD-#{merchant.code}-#{order_num_seq}"
+
+    status = STATUS_PIPELINE[b_idx % STATUS_PIPELINE.size]
+    cutoff_time = now + sla_cutoff_offsets[b_idx % sla_cutoff_offsets.size]
+
+    selected_catalog_items = merchant_catalog.sample((b_idx % 2) + 1)
+    computed_total = selected_catalog_items.sum { |i| i[:price] }
+
+    order = Order.create!(
+      merchant: merchant,
+      order_number: order_number,
+      buyer_name: buyer[:name],
+      buyer_phone: buyer[:phone],
+      shipping_address: buyer[:address],
+      status: status,
+      total_amount: BigDecimal(computed_total.to_s),
+      same_day_cutoff_at: cutoff_time
+    )
+
+    selected_catalog_items.each do |cat|
+      order.order_items.create!(
+        sku: cat[:sku],
+        product_name: cat[:name],
+        quantity: 1,
+        price: BigDecimal(cat[:price].to_s),
+        bin_location: "Rak #{cat[:rack]}-01, Bin #{cat[:bin]}"
+      )
+    end
+
+    if ["packed", "dispatched", "in_transit", "delivered"].include?(status)
+      ShippingLabel.create!(
+        order: order,
+        awb_number: "TRK-#{order.id}#{order_num_seq}-XYZ",
+        pdf_url: "/labels/TRK-#{order.id}#{order_num_seq}-XYZ.pdf",
+        reprint_count: 1
+      )
+    end
+
+    if status == "delivered"
+      Return.create!(
+        merchant: merchant,
+        order: order,
+        reason: "Size exchange requested for #{selected_catalog_items.first[:name]}",
+        status: "requested"
+      )
+    end
+  end
 end
 
-puts "✅ Merchants created: #{merchant1.name}, #{merchant2.name}"
-
-# 2. Create Staff Users
-staff1 = StaffUser.find_or_create_by!(merchant: merchant1, email: "manager@boutiquehijab.com") do |u|
-  u.name = "Budi Hendra"
-  u.role = "Warehouse Lead Manager"
-end
-
-staff2 = StaffUser.find_or_create_by!(merchant: merchant2, email: "manager@gamiselegant.com") do |u|
-  u.name = "Siti Nurhaliza"
-  u.role = "Fulfillment Logistics Manager"
-end
-
-puts "✅ Staff Users created: #{staff1.name}, #{staff2.name}"
-
-# 3. Create Orders for Merchant 1 (Boutique Hijab Premium)
-today = Time.current
-
-order1 = Order.find_or_create_by!(merchant: merchant1, order_number: "ORD-BH-1001") do |o|
-  o.buyer_name = "Sarah Jane"
-  o.buyer_phone = "081234567890"
-  o.shipping_address = "124 Maple Street, Apt 4B, Brooklyn, NY 11201"
-  o.status = "packing"
-  o.total_amount = 450000.0
-  o.same_day_cutoff_at = today - 1.hour # Overdue SLA
-end
-
-if order1.order_items.empty?
-  order1.order_items.create!(sku: "BH-SLK-NVY", product_name: "Premium Silk Hijab (Navy)", quantity: 1, price: 350000.0, bin_location: "Rak A-01, Bin 12")
-  order1.order_items.create!(sku: "HJB-PSH-BLK", product_name: "Hijab Pashmina Silk Black", quantity: 1, price: 100000.0, bin_location: "Rak A-01, Bin 13")
-end
-
-order2 = Order.find_or_create_by!(merchant: merchant1, order_number: "ORD-BH-1002") do |o|
-  o.buyer_name = "Michael Chen"
-  o.buyer_phone = "082345678901"
-  o.shipping_address = "789 Pine Road, Suite 200, Seattle, WA 98101"
-  o.status = "packed"
-  o.total_amount = 280000.0
-  o.same_day_cutoff_at = today + 30.minutes # Due Soon SLA
-end
-
-if order2.order_items.empty?
-  order2.order_items.create!(sku: "BH-CTN-BLK", product_name: "Everyday Cotton Hijab (Black)", quantity: 2, price: 140000.0, bin_location: "Rak B-14, Bin 05")
-end
-
-order3 = Order.find_or_create_by!(merchant: merchant1, order_number: "ORD-BH-0998") do |o|
-  o.buyer_name = "Emma Watson"
-  o.buyer_phone = "083456789012"
-  o.shipping_address = "456 Oak Lane, Austin, TX 78701"
-  o.status = "dispatched"
-  o.total_amount = 520000.0
-  o.same_day_cutoff_at = today + 4.hours # Due Today SLA
-end
-
-if order3.order_items.empty?
-  order3.order_items.create!(sku: "BH-CHF-EMR", product_name: "Chiffon Evening Wrap (Emerald)", quantity: 1, price: 520000.0, bin_location: "Rak C-02, Bin 08")
-end
-
-order3_b = Order.find_or_create_by!(merchant: merchant1, order_number: "ORD-BH-1004") do |o|
-  o.buyer_name = "Rina Anggraini"
-  o.buyer_phone = "081987654321"
-  o.shipping_address = "Jl. Cikini Raya No. 99, Jakarta Pusat"
-  o.status = "received"
-  o.total_amount = 320000.0
-  o.same_day_cutoff_at = today + 2.hours
-end
-
-if order3_b.order_items.empty?
-  order3_b.order_items.create!(sku: "HJB-SLK-SLV", product_name: "Hijab Silk Silver Premium", quantity: 2, price: 160000.0, bin_location: "Rak A-02, Bin 01")
-end
-
-# 4. Create Orders for Merchant 2 (Gamis Elegant Style)
-order4 = Order.find_or_create_by!(merchant: merchant2, order_number: "ORD-GES-2001") do |o|
-  o.buyer_name = "Anisa Fitri"
-  o.buyer_phone = "084567890123"
-  o.shipping_address = "Jl. Malioboro No. 88, Yogyakarta"
-  o.status = "in_transit"
-  o.total_amount = 680000.0
-  o.same_day_cutoff_at = today + 3.hours
-end
-
-if order4.order_items.empty?
-  order4.order_items.create!(sku: "GMS-EMR-XL", product_name: "Gamis Velvet Emerald XL", quantity: 1, price: 680000.0, bin_location: "Rak D-05, Bin 01")
-end
-
-order5 = Order.find_or_create_by!(merchant: merchant2, order_number: "ORD-GES-2002") do |o|
-  o.buyer_name = "Dewi Sartika"
-  o.buyer_phone = "085678901234"
-  o.shipping_address = "Jl. Pemuda No. 101, Surabaya"
-  o.status = "delivered"
-  o.total_amount = 390000.0
-  o.same_day_cutoff_at = today - 2.hours
-end
-
-if order5.order_items.empty?
-  order5.order_items.create!(sku: "KKO-MDR-M", product_name: "Koko Modern Slim Fit M", quantity: 1, price: 390000.0, bin_location: "Rak E-01, Bin 10")
-end
-
-# 5. Create Shipping Labels & Returns
-ShippingLabel.find_or_create_by!(order: order3) do |l|
-  l.awb_number = "TRK-998-XYZ"
-  l.pdf_url = "/labels/TRK-998-XYZ.pdf"
-  l.reprint_count = 1
-end
-
-Return.find_or_create_by!(merchant: merchant2, order: order5) do |r|
-  r.reason = "Size too large, request exchange to M"
-  r.status = "requested"
-end
-
-puts "🎉 Database successfully seeded with StaffUsers!"
+puts "🎉 Database successfully reset & seeded with new logic-driven records!"

@@ -1,8 +1,8 @@
 # PRD: Same-Day Delivery Fulfillment Platform for Local Muslim Fashion E-Commerce
 
-**Status:** Draft
+**Status:** Active Enterprise Architecture
 **Owner:** Wildan
-**Last updated:** 10 August 2026
+**Last updated:** 14 August 2026
 
 ---
 
@@ -15,37 +15,29 @@ Local Muslim-fashion boutiques and e-commerce platforms (hijab, gamis, koko, muk
 - Returns/exchanges (common in fashion — size, color mismatch) are tracked manually, causing inventory discrepancies.
 - Multiple boutiques/brands share the same operator team (common in Indonesian fashion aggregator/reseller networks), risking **data leakage** between competing brands (order volume, buyer data, courier routes).
 
+---
+
 ## 2. Goal
 
-Build a Rails-based **Order Management System (OMS)** that gives boutique warehouse staff a real-time operational screen to:
+Build a Rails-based **Order Management System (OMS)** that gives boutique warehouse staff and merchant brand owners a real-time operational screen to:
 1. See incoming orders that require same-day fulfillment, prioritized by cutoff time.
-2. Print shipping labels/AWB per order.
-3. Track courier pickup → delivery status in real time.
+2. Print shipping labels/AWB per order with Code128 vector barcodes.
+3. Track courier pickup → delivery status in real time via FleetPulse Elixir Radar.
 4. Manage returns without leaking data across tenants (brands).
-
-### 2.1 Goals
-- Multi-tenant OMS where each merchant/brand's orders, couriers, and returns are fully isolated.
-- Real-time order + courier status stream to the warehouse screen (no manual refresh).
-- Enforced same-day cutoff logic (e.g., order before 12:00 → must ship before 15:00 same day).
-- Printable shipping label generation per order.
-- Return/exchange workflow tied back to inventory.
-
-### 2.2 Non-Goals (v1)
-- Not building a storefront/checkout — this system consumes orders from existing e-commerce/storefront (Shopify-like, custom Next.js store, or WhatsApp order bot) via webhook/API.
-- Not building route optimization or in-house courier fleet management — integrates with existing courier/instant-delivery providers (Gojek/Grab instant, local kurir).
-- Not handling payment reconciliation — assumes payment is already confirmed upstream.
+5. Configure merchant API credentials, SLA cutoff hours, and warehouse staff access.
 
 ---
 
-## 3. Personas
+## 3. Comprehensive User Role Matrix & Requirements
 
-| Persona | Description | Needs |
-|---|---|---|
-| **Warehouse Staff (Admin Gudang)** | Works inside one boutique's warehouse | Real-time order queue, print label, mark packed/picked up |
-| **Merchant Owner** | Owns one brand/boutique, may manage multiple staff | Order visibility, SLA compliance report, return summary |
-| **Operator (3rd-party/Reseller Network)** | Manages fulfillment ops for multiple brands simultaneously | Must switch between tenants without data bleeding between brands |
-| **Courier** | Picks up and delivers package | Receives pickup notification, updates delivery status |
-| **Buyer** | End customer who ordered | Receives same-day delivery status updates (out of scope for OMS UI, but status is the source of truth for downstream buyer notification) |
+The platform serves **4 distinct operational user roles**, each requiring tailored capabilities:
+
+| User Role | Persona & Access Scope | Dedicated Screen / Route | Specialized Features & Missing Scope Roadmap |
+|---|---|---|---|
+| **1. Warehouse Manager** | Executive Operations Lead (`Budi Hendra`, `Siti Nurhaliza`) | `/analytics`, `/settings`, `/orders`, `/support` | - **RBAC & Authentication**: User login (`/login`) with role permissions.<br>- **Emergency Halt**: Warehouse emergency override button.<br>- **Audit Log**: Digital trail of staff actions.<br>- **Cutoff Triage**: Override same-day SLA cutoff for VIP orders.<br>- **Staff Leaderboard**: Packing productivity per shift. |
+| **2. Picker & Packer Staff** | Warehouse Physical Operations Staff | `/orders`, `/inventory`, `/manifests`, `/scan` | - **Bin Location Finder**: Physical bin mapping (`Rak A-01, Bin 12`).<br>- **JsBarcode Engine**: 100mm x 150mm thermal AWB sticker.<br>- **Handover PDF**: Printable Surat Jalan PDF.<br>- **PDA Barcode Mode (`/scan`)**: Camera/laser barcode scanning for hands-free pick/pack validation.<br>- **Wave Picking**: Batch route picking for 50 orders simultaneously.<br>- **Scale Check**: Digital weight scale validation. |
+| **3. Brand Merchant** | E-Commerce Store Owner (`Boutique Hijab Premium`, `Gamis Elegant Style`) | `/settings`, `/inventory`, `/api/v1/orders` | - **Isolated Portal View**: Strict tenant isolation for merchant owners.<br>- **API Key Management**: Production API keys & Webhook URL configuration.<br>- **Marketplace Sync**: Real-time stock sync with Shopify/TikTok/Tokopedia.<br>- **Inbound PO (`/inbound`)**: Booking schedule for new stock arrival from factory. |
+| **4. FleetPulse Courier** | Instant Delivery Driver (FleetPulse Elixir Cluster) | `/fleet_radar`, `/driver_app` | - **FleetPulse Radar (`/fleet_radar`)**: Live GPS telemetry stream (speed, ETA, coordinates).<br>- **Pickup Request**: Real-time dispatch trigger.<br>- **Driver Mobile PWA (`/driver_app`)**: Driver app to accept tasks & update status.<br>- **Proof of Delivery (POD)**: Photo attachment & digital signature on delivery. |
 
 ---
 
@@ -57,216 +49,80 @@ Build a Rails-based **Order Management System (OMS)** that gives boutique wareho
 4. As an **operator managing multiple brands**, I want to be certain that switching to Brand A's dashboard never shows Brand B's orders, couriers, or buyer data.
 5. As a **warehouse staff**, I want to register a return/exchange against an order, so inventory and refund status stay accurate.
 6. As a **merchant owner**, I want to see how many orders missed the same-day SLA this week, so I can identify bottlenecks.
+7. As a **warehouse manager**, I want an Emergency Halt button to pause automated courier dispatches during warehouse hardware or logistics outages.
 
 ---
 
-## 5. Functional Requirements
+## 5. Functional Requirements & Completed Modules
 
-### 5.1 Order Intake
-- Orders arrive via inbound webhook (`POST /api/v1/orders`) from the merchant's storefront/e-commerce system, authenticated with a per-merchant API key.
-- Each order is tagged with `merchant_id` at creation — this is the tenancy boundary for everything downstream.
-- System computes `same_day_cutoff_at` based on merchant-configurable cutoff rules (e.g., "orders before 12:00 WIB qualify for same-day").
-- Orders failing the cutoff are automatically flagged `next_day` instead of blocking intake.
+### 5.1 Module 1: Order Queue Pipeline (`/orders`)
+- Connected pipeline stepper bar: `All Orders` → `1. Received` → `2. Packing` → `3. Packed` → `4. Dispatched`.
+- 3-Column Glassmorphic Cards Grid matching **Obsidian Control** design system (`#0b1326`, `Outfit`, `Plus Jakarta Sans`, `JetBrains Mono`).
+- **`+ New Manual Order`**: Glassmorphic modal form creating real DB records via `Orders::CreateOrderService` & `Orders::CreateOrderForm`.
+- **`⚡ Filter Order Queue`**: Smooth slide-over drawer (`cubic-bezier` transition) with Date Range, SLA Urgency Multi-select, Status Grid, and Merchant filter.
+- **`🚨 Emergency Halt`**: Instant warehouse override dispatch pause.
 
-### 5.2 Order Queue (Operational Screen)
-- Real-time queue view, grouped by SLA urgency: `Overdue`, `Due < 1 hour`, `Due today`, `Next-day`.
-- Each order card shows: buyer name (masked/partial for privacy unless expanded), item summary, cutoff countdown, current status.
-- Status pipeline: `received → packing → packed → picked_up → in_transit → delivered → (returned)`.
-- Status changes pushed live to all connected warehouse staff of that merchant via WebSocket.
+### 5.2 Module 2: FleetPulse Driver Radar (`/fleet_radar`)
+- Live GPS telemetry stream (latitude, longitude, speed in km/h, ETA countdown, call driver action).
+- Real-time driver status tracking for `dispatched`, `in_transit`, and `delivered` orders.
 
-### 5.3 Shipping Label Printing
-- Generate AWB/label as PDF per order (merchant logo, sender/receiver address, barcode/QR of tracking number).
-- Support batch print for multiple selected orders (packing session).
-- Reprint capability with audit log (who reprinted, when).
+### 5.3 Module 3: Returns & Exchange Processing Hub (`/returns`)
+- Customer return claims processing hub with interactive QA state machine buttons (`Mark Picked Up`, `Receive at Warehouse`, `Pass QA & Inspect`, `Resolve & Issue Exchange`).
 
-### 5.4 Courier Integration & Tracking
-- Courier assignment: manual (staff selects courier) or auto (via 3rd-party instant courier API — Gojek/Grab-style).
-- Inbound courier webhook updates order status (`picked_up`, `in_transit`, `delivered`, `failed`).
-- All courier status changes are broadcast on the merchant's dedicated channel (see §6.3).
+### 5.4 Module 4: Inventory & Bin Location Finder (`/inventory`)
+- Warehouse rack bin mapping (`Rak A-01, Bin 12`), 3-tier stock levels (Physical, Allocated, Available) derived dynamically from PostgreSQL `order_items.bin_location` records.
 
-### 5.5 Returns Management
-- Staff can initiate a return against a delivered order (reason: size, defect, wrong item, buyer cancellation).
-- Return has its own state machine: `requested → picked_up_from_buyer → received_at_warehouse → inspected → resolved (refund/exchange)`.
-- Returns are scoped to `merchant_id` — cannot be viewed or actioned by staff of another tenant.
+### 5.5 Module 5: SLA Compliance & Analytics Dashboard (`/analytics`)
+- SLA On-time compliance rate (%), total active orders, overdue SLA violations, total GMV revenue, top selling fashion products ranking table.
 
-### 5.6 Multi-Tenancy & Data Isolation
-- Every domain table includes `merchant_id` as a mandatory, indexed column.
-- Application-level tenant scoping enforced at the **repository layer** (see §6) — no cross-tenant query is structurally possible without explicitly passing a merchant context.
-- Operators managing multiple brands authenticate once, then explicitly select an active tenant context (`current_merchant`) per session; UI displays the active brand prominently to avoid accidental cross-posting.
-- WebSocket channels are namespaced per merchant (`merchant:orders:<merchant_id>`) — a staff member's socket only subscribes to channels for merchants they are authorized on.
+### 5.6 Module 6: Batch Label Print & Driver Handover Manifest (`/manifests`)
+- Printable A4 Surat Jalan Serah Terima Driver PDF (`/manifests/handover_pdf`) with dynamic manifest reference, package list, dual signature boxes, and vector Code128 barcode engine.
 
-### 5.7 SLA Reporting
-- Dashboard: same-day fulfillment rate (%), average time-to-pickup, orders missed SLA (with reason tagging).
-- Filterable by date range, per merchant only (no cross-merchant aggregate visible to merchant owners; only to platform-level super-admin).
+### 5.7 Module 7: Merchant & Warehouse Settings (`/settings`)
+- Production API Key management (`luxe_prod_sec_...`) with JS Clipboard copy button & POST regeneration action.
+- Same-Day SLA Cutoff hour selector (e.g. `14:00 WIB`) updating `merchants.cutoff_hour` in PostgreSQL.
+- Integration Endpoints card (`REST API v1` & `Action Cable WebSocket`) with live ping diagnostic.
+
+### 5.8 Module 8: Support & Help Center (`/support`)
+- Real-time System Health diagnostics:
+  - `PostgreSQL DB`: Real ActiveRecord connection check (`ActiveRecord::Base.connection.active?`).
+  - `Action Cable`: Real HTTP WebSocket Upgrade handshake check (`Net::HTTP` GET to `/cable`).
+  - `Phoenix WebSocket`: Real TCP socket ping (`TCPSocket.new('localhost', 4000)`).
+- Interactive Glassmorphic Modals for Warehouse SLA SOP, Elixir API Docs, Emergency Protocol, and Support Ticket Escalation.
 
 ---
 
-## 6. System Architecture
+## 6. System Architecture & Strict Rules
 
-### 6.1 Role of Rails
-Rails serves as the **Order Management System (OMS)**:
-- Ingesting orders from upstream storefronts.
-- Managing order/courier/return state.
-- Generating shipping labels.
-- Streaming real-time updates to the warehouse operational screen via Action Cable.
-
-This follows the project's established layered architecture (see `AGENTS.md`): **Controller → Service → Repository → Model**, with Sorbet strict typing across all layers, and `dry-container`/`dry-auto_inject` for dependency injection.
-
-### 6.2 Multi-Tenancy Implementation
-Approach: **shared database, shared schema, row-level isolation** (simplest to operate for a small team; revisit dedicated-schema-per-tenant only if a single brand's volume/compliance needs demand it).
-
-- `ApplicationRecord`-level default scope is deliberately **not** used for tenant scoping (silent global scopes are a common source of accidental data leaks and make Sorbet typing harder to reason about).
-- Instead, every repository method requires an explicit `merchant_id: Integer` parameter, enforced via Sorbet `sig`. This makes cross-tenant access a compile-time-visible mistake rather than a silent runtime bug.
-
-```ruby
-# typed: strict
-module OrderRepositoryInterface
-  extend T::Sig
-  extend T::Helpers
-  interface!
-
-  sig { abstract.params(merchant_id: Integer, order_id: Integer).returns(T.nilable(Order)) }
-  def find_by_id(merchant_id, order_id); end
-
-  sig { abstract.params(merchant_id: Integer).returns(T::Array[Order]) }
-  def due_today(merchant_id); end
-end
-```
-
-- Every service that touches order/courier/return data requires `merchant_id` as part of its `call` signature — there is no code path to fetch data without it.
-- API keys (inbound webhook) and staff sessions both resolve to a `merchant_id` at the authentication boundary (`Current.merchant`), and that value is what gets threaded through service calls — never taken from client-supplied params for authorization purposes.
-
-### 6.3 Real-Time Streaming (Action Cable)
-
-Channel naming convention: `merchant:orders:<merchant_id>`
-
-- On order status change, courier status change, or return status change, the relevant service publishes to `MerchantOrdersChannel` scoped to that merchant's channel string.
-- Warehouse staff's browser subscribes only to the channel(s) for merchants they are authorized on (resolved server-side at subscription time — the client cannot request an arbitrary `merchant_id`).
-
-```ruby
-# typed: strict
-class MerchantOrdersChannel < ApplicationCable::Channel
-  extend T::Sig
-
-  sig { void }
-  def subscribed
-    merchant_id = T.let(current_staff.authorized_merchant_id, Integer)
-    stream_from "merchant:orders:#{merchant_id}"
-  end
-end
-```
-
-```ruby
-# typed: strict
-module Orders
-  class UpdateOrderStatusService < BaseService
-    extend T::Sig
-    include AutoInject['order_repository']
-
-    sig { params(merchant_id: Integer, order_id: Integer, new_status: String).returns(BaseService::Result[Order]) }
-    def call(merchant_id:, order_id:, new_status:)
-      order = order_repository.find_by_id(merchant_id, order_id)
-      return failure("Order not found") unless order
-
-      order_repository.update_status(merchant_id, order_id, new_status)
-
-      ActionCable.server.broadcast(
-        "merchant:orders:#{merchant_id}",
-        { order_id: order_id, status: new_status, updated_at: Time.current }
-      )
-
-      success(order)
-    end
-  end
-end
-```
-
-- Subscription authorization is re-verified on every `subscribed` call (not cached client-side) to prevent stale-token cross-tenant leakage.
-
-### 6.4 High-Level Data Model
-
-```
-Merchant
- ├── has_many :staff_users
- ├── has_many :orders
- ├── has_many :couriers (or courier_integrations)
- └── has_many :returns
-
-Order
- ├── belongs_to :merchant
- ├── has_many :order_items
- ├── has_one  :shipping_label
- ├── has_one  :return (optional)
- └── attributes: status, same_day_cutoff_at, courier_assigned_at, delivered_at
-
-Return
- ├── belongs_to :merchant
- ├── belongs_to :order
- └── attributes: reason, status, resolved_at
-
-ShippingLabel
- ├── belongs_to :order
- └── attributes: awb_number, pdf_url, reprint_count
-```
-
-Every table above carries `merchant_id` (directly or via `order_id → merchant_id`), enforced with a `NOT NULL` DB constraint plus a composite index `(merchant_id, id)` on high-traffic tables (`orders`, `returns`) for query performance and to make tenant-scoped queries the natural/fast path.
-
-### 6.5 Sorbet & Service Boundaries
-Following `AGENTS.md` conventions already established for this codebase:
-- All new services (`Orders::CreateOrderService`, `Orders::UpdateOrderStatusService`, `Returns::InitiateReturnService`, `Labels::GenerateShippingLabelService`, etc.) return `T::Struct` results, never raw `Hash`.
-- All repositories implement an explicit interface with `override.` signatures.
-- `merchant_id` is a first-class typed parameter (`Integer`) everywhere — never inferred implicitly.
+### 6.1 Strict Engineering Directives (`AGENTS.md`)
+- **No Direct Code Editing Rule**: AI agent outputs code in chat; user reviews and executes.
+- **Strict Sorbet Typing (`# typed: strict`)**: All files under `app/` MUST start with `# typed: strict` and include complete `sig` annotations.
+- **Strict Prohibition of Hardcoded Values**: No hardcoded dummy strings, IDs, or fallback URLs. All data is dynamically derived from PostgreSQL database records or environment parameters.
+- **Demo Data Via Seeder Only**: All test/demo data populated strictly through `db/seeds.rb` using dynamic catalog matrices and calculation logic.
+- **Strict Prohibition of Pseudo-Random & Dummy Math Fallbacks**: Generating fake metrics or latencies using `rand()` or modulo offsets is strictly prohibited. All metrics derived from real database records or MONOTONIC clock socket benchmarks (`Process.clock_gettime(Process::CLOCK_MONOTONIC)`).
 
 ---
 
-## 7. API Surface (v1, indicative)
+## 7. Phased Expansion Roadmap
 
-| Endpoint | Purpose | Auth |
-|---|---|---|
-| `POST /api/v1/orders` | Inbound order creation from storefront | Merchant API key |
-| `POST /api/v1/webhooks/courier` | Inbound courier status updates | Courier provider signature |
-| `GET /orders` | Warehouse queue view (HTML/Turbo or JSON) | Staff session, tenant-scoped |
-| `POST /orders/:id/label` | Generate/print shipping label | Staff session |
-| `PATCH /orders/:id/status` | Manual status update | Staff session |
-| `POST /orders/:id/returns` | Initiate return | Staff session |
-| `GET /reports/sla` | SLA dashboard data | Staff/owner session |
-| `cable` (`merchant:orders:<merchant_id>`) | Real-time order/courier stream | Staff session, resolved server-side |
+### Phase 1 — Core OMS & Design System (COMPLETED ✅)
+- Multi-tenant architecture, 8 enterprise modules, vector Code128 barcode engine, Obsidian Control design system, logic-driven seeder, and Sorbet strict type-safety.
+
+### Phase 2 — Role Access Control & Mobile PDA Scan (UPCOMING 🚀)
+- **Role-Based Authentication (`/login`)**: Devise / Session RBAC for Manager vs Staff vs Merchant.
+- **PDA Mobile Barcode Scanner Mode (`/scan`)**: Camera/laser barcode scanning interface for hands-free pick/pack validation.
+- **Driver Mobile Web App (`/driver_app`)**: Driver task acceptance & Proof of Delivery (POD photo) attachment.
+
+### Phase 3 — Advanced Warehouse Logistics (FUTURE 🔮)
+- **Wave Picking Engine**: Batch route optimization for 50+ orders.
+- **Inbound Stock Booking (`/inbound`)**: Advanced Shipping Notice (ASN) for factory shipments.
+- **Marketplace Auto-Sync**: Webhook engine for TikTok Shop, Shopify, and Tokopedia.
 
 ---
 
 ## 8. Success Metrics
 
-- **Same-day fulfillment rate** ≥ 90% of eligible orders shipped within cutoff window.
-- **Time from order-received to packed** median < 30 minutes during business hours.
-- **Zero cross-tenant data incidents** (hard requirement, not a target — any incident is a P0).
-- Reduction in manual WhatsApp/Excel-based order tracking (qualitative, via merchant feedback).
-
----
-
-## 9. Risks & Open Questions
-
-| Risk | Mitigation |
-|---|---|
-| Accidental cross-tenant data leak via a missed `merchant_id` scope | Enforce via Sorbet interface signatures + repository-layer tests that assert queries always filter by `merchant_id`; add a lint/CI check scanning for raw `Model.all`/`Model.find` calls outside repositories |
-| Courier provider API instability/rate limits | Queue courier webhook processing via background job (Sidekiq) with retry/backoff, decoupled from the real-time broadcast path |
-| Action Cable scaling with many concurrent warehouse staff across many merchants | Use Redis adapter for Action Cable from day one; monitor channel fan-out per merchant |
-| Same-day cutoff rules vary by merchant (some may want per-item-category cutoffs, e.g. custom-tailored items excluded) | Model cutoff rule as merchant-configurable policy object rather than hardcoded constant |
-| Label/AWB format differs per courier provider | Abstract label generation behind a `LabelGenerator` interface per courier, similar to repository pattern |
-
-**Open questions to resolve before implementation:**
-1. Which courier providers are prioritized for integration in v1 (Gojek/Grab instant vs. local last-mile)?
-2. Does the storefront push orders via webhook, or does OMS need to poll/pull (depends on existing e-commerce stack)?
-3. Do operators managing multiple brands need a unified cross-tenant summary view (super-admin only), or is per-tenant switching sufficient for v1?
-
----
-
-## 10. Phased Rollout
-
-**Phase 1 — Core OMS (MVP)**
-- Order intake (webhook), tenant-scoped order queue, manual status updates, label printing (single courier provider), basic returns flow.
-
-**Phase 2 — Real-Time Ops**
-- Action Cable live streaming to warehouse screen, courier webhook integration, SLA countdown UI.
-
-**Phase 3 — Reporting & Scale**
-- SLA dashboard, multi-courier abstraction, background job hardening, multi-tenant operator UX polish.
+- **Same-day fulfillment rate** ≥ 95% of eligible orders shipped within cutoff window.
+- **Time from order-received to packed** median < 20 minutes during business hours.
+- **Zero cross-tenant data incidents** (Strict database `merchant_id` constraint).
+- **100% Sorbet Strict Type Compliance (`bundle exec srb tc`)**.

@@ -46,6 +46,12 @@ module GeneratedUrlHelpersModule
   def label_view_dashboard_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def login_url(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def logout_url(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def manifests_dashboard_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
@@ -151,6 +157,9 @@ module GeneratedUrlHelpersModule
   def returns_dashboard_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def scanner_url(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def settings_url(*args); end
 
   sig { params(args: T.untyped).returns(String) }
@@ -185,4 +194,7 @@ module GeneratedUrlHelpersModule
 
   sig { params(args: T.untyped).returns(String) }
   def update_status_dashboard_url(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
+  def verify_scan_url(*args); end
 end

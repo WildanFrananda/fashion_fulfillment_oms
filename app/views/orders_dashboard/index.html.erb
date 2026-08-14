@@ -143,20 +143,27 @@
         <div style="margin-top: 16px;">
           <% if card.status == 'received' || card.status == 'packing' %>
             <div style="display: flex; gap: 8px;">
+              <%= link_to scanner_path(merchant_id: @current_merchant&.id, order_id: card.id), 
+                    class: "btn-action", 
+                    style: "flex: 1; background: linear-gradient(135deg, #8083ff, #6366f1); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; font-size: 13px;" do %>
+                <span>📱 Scan Order</span>
+              <% end %>
+
               <%= button_to update_status_dashboard_path(card.id, merchant_id: @current_merchant&.id, status: 'packed'), 
                     method: :patch, 
                     class: "btn-action btn-success", 
-                    style: "flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;" do %>
-                <span>📦 Mark Packed</span>
+                    style: "width: 44px; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 6px;", title: "Mark Packed" do %>
+                <span>📦</span>
               <% end %>
 
               <%= link_to label_view_dashboard_path(card.id, merchant_id: @current_merchant&.id), 
                     target: "_blank", 
                     class: "btn-action", 
-                    style: "width: 44px; padding: 10px; background: var(--surface-container-high); border: 1px solid var(--border-highlight); color: #fff; display: flex; align-items: center; justify-content: center;" do %>
+                    style: "width: 44px; padding: 10px; background: var(--surface-container-high); border: 1px solid var(--border-highlight); color: #fff; display: flex; align-items: center; justify-content: center;", title: "Print Thermal AWB Label" do %>
                 <span>🖨️</span>
               <% end %>
             </div>
+
           <% elsif card.status == 'packed' %>
             <div style="display: flex; gap: 8px;">
               <%= button_to dispatch_fleet_pulse_dashboard_path(card.id, merchant_id: @current_merchant&.id), 
