@@ -19,6 +19,8 @@ gem "jbuilder"
 
 gem "faye-websocket"
 gem "barby"
+gem "phlex-rails"
+
 
 
 gem "dry-container"

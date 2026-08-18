@@ -113,7 +113,9 @@ The platform serves **4 distinct operational user roles**, each requiring tailor
 - **PDA Mobile Barcode Scanner Mode (`/scan`)**: Camera/laser barcode scanning interface for hands-free pick/pack validation.
 - **Driver Mobile Web App (`/driver_app`)**: Driver task acceptance & Proof of Delivery (POD photo) attachment.
 
-### Phase 3 — Advanced Warehouse Logistics (FUTURE 🔮)
+### Phase 3 — Advanced Warehouse Logistics & Pure Microservices Strategy (IN PROGRESS 🚀)
+- **Pure Warehouse Scope**: Keep `fashion_fulfillment_oms` 100% focused on warehouse operations, bin locations, packing scanner verification, shipping labels, and driver dispatch without monolithic bloat (no storefront cart or payment gateway logic in OMS).
+- **Storefront Microservice Ingress**: External storefront microservices (E-Commerce A, E-Commerce B, etc.) connect via gRPC for order creation & status inquiries.
 - **Wave Picking Engine**: Batch route optimization for 50+ orders.
 - **Inbound Stock Booking (`/inbound`)**: Advanced Shipping Notice (ASN) for factory shipments.
 - **Marketplace Auto-Sync**: Webhook engine for TikTok Shop, Shopify, and Tokopedia.
@@ -126,3 +128,39 @@ The platform serves **4 distinct operational user roles**, each requiring tailor
 - **Time from order-received to packed** median < 20 minutes during business hours.
 - **Zero cross-tenant data incidents** (Strict database `merchant_id` constraint).
 - **100% Sorbet Strict Type Compliance (`bundle exec srb tc`)**.
+
+---
+
+## 9. Approved Enterprise Microservices & gRPC Architecture Blueprint
+
+> **Status:** Officially Approved Architectural Blueprint  
+> **Master Reference Artifact:** `microservices_grpc_migration_plan.md`
+
+### 9.1 Multi-Tenant Microservices Domain Separation
+To prevent monolithic bloat, the ecosystem is strictly decoupled into single-responsibility microservices:
+
+1. **Storefront Microservice (External / Future Projects)**:
+   - Responsible for Product Catalog, Storefront Display, Cart, Customer Auth, and Payment Gateways (Midtrans, Xendit, QRIS).
+   - Operates independently for E-Commerce A, E-Commerce B, etc.
+   - Communicates with OMS via **gRPC Protobuf** on Port `50051` as soon as payment is confirmed (`status: paid`).
+
+2. **Warehouse Fulfillment OMS Engine (`fashion_fulfillment_oms` — Rails 8)**:
+   - Dedicated warehouse fulfillment engine (`# typed: strict`).
+   - Responsible for Order Queue Triage, Warehouse Bin Picking (`bin_location`), Barcode Scanner Packing Verification (`/scan`), Thermal Shipping Label PDF Generation, and Fleet Dispatch Triggers.
+
+3. **Fleet & Telemetry Microservice (`fleet_pulse` — Elixir / Phoenix)**:
+   - Dedicated real-time courier telemetry cluster (`ws://localhost:4000/socket/websocket`).
+   - Responsible for Live GPS Telemetry, Driver Duty Status, and Push Notifications to Driver App (`fleet_pulse_mobile`).
+
+### 9.2 Inter-Service Protocol & Contract Specifications (`fulfillment_service.proto`)
+- **Inter-Service Communication**: gRPC (Google Remote Procedure Call) over HTTP/2 using binary Protocol Buffers (`.proto`).
+- **Target Response Time**: < 5ms for synchronous RPC calls (`CreateOrder`, `GetOrderStatus`, `CancelOrder`, `CheckBinStock`).
+- **Multi-Tenant Security**: gRPC Metadata Header `x-merchant-api-key` verified against PostgreSQL `merchants.api_key`.
+
+### 9.3 Real-Time Streaming Matrix
+- **Driver App ↔ Elixir Telemetry**: Bi-directional **WebSockets (WS)** for instant GPS pings and task assignment.
+- **OMS Supervisor Fleet Radar (`/fleet_radar`)**: **Action Cable WebSockets** streaming dynamic courier position markers (`latitude`, `longitude`, `speed_kmh`, `eta_minutes`).
+- **Customer Order Tracking Screen**: **Server-Sent Events (SSE)** (`text/event-stream`) 1-way stream for battery-efficient mobile live tracking.
+
+### 9.4 Database Migration & Hardcoding Prohibition Rule
+- **No Hardcoded Fallbacks Rule**: Hardcoding fallback values (coordinates, status codes, dummy arrays) inside controllers or models is strictly prohibited. If a database table lacks required fields (such as `latitude` & `longitude` on `merchants`), proper ActiveRecord migrations, model attributes, and Sorbet `# typed: strict` signatures MUST be created instead.
