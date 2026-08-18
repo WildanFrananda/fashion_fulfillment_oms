@@ -19,8 +19,10 @@ class OrdersDashboardController < ApplicationController
     const :shipping_address, String
     const :status, String
     const :sla_urgency, String
+    const :created_at, T.nilable(Time)
     const :items, T::Array[OrderCardItemData]
   end
+
 
   sig { void }
   def index
@@ -40,9 +42,18 @@ class OrdersDashboardController < ApplicationController
     service = T.let(Container[:get_order_queue_service], Orders::GetOrderQueueService)
     result = service.call(merchant_id: merchant_id)
 
-    @order_cards = T.let(result.success? ? result.data : [], T.anything)
-    render layout: "dashboard"
+    order_cards = T.cast(result.success? ? result.data : [], T::Array[OrdersDashboardController::OrderCardData])
+    render Views::OrdersDashboard::Index.new(
+
+      order_cards: order_cards,
+      current_merchant: @current_merchant,
+      merchants: @merchants,
+      status_filter: params[:status_filter].to_s,
+      notice_flash: flash[:notice],
+      alert_flash: flash[:alert]
+    ), layout: false
   end
+
 
   sig { void }
   def print_label
