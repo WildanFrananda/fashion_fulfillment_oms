@@ -196,5 +196,8 @@ module GeneratedPathHelpersModule
   def update_status_dashboard_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def update_status_returns_dashboard_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def verify_scan_path(*args); end
 end

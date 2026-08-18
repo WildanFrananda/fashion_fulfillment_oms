@@ -40,7 +40,7 @@ class AnalyticsController < ApplicationController
       total_rev += amt if amt
 
       cutoff = ord.same_day_cutoff_at
-      if cutoff && cutoff < now && ["received", "packing"].include?(ord.status)
+      if cutoff && cutoff < now && [ "received", "packing" ].include?(ord.status)
         overdue_count += 1
       else
         on_time_count += 1
@@ -88,8 +88,14 @@ class AnalyticsController < ApplicationController
     end
 
     sorted_products = top_map.values.sort_by { |p| -p.total_units_sold }
-    @top_products = T.let(sorted_products, T.nilable(T::Array[TopProductData]))
-
-    render layout: "dashboard"
+    render Views::Analytics::Index.new(
+      sla_compliance_rate: sla_rate_pct,
+      total_orders: total_orders_count,
+      overdue_orders_count: overdue_count,
+      total_revenue: total_rev,
+      top_products: sorted_products,
+      current_merchant: @current_merchant,
+      merchants: @merchants
+    ), layout: false
   end
 end

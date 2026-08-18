@@ -32,6 +32,8 @@ Rails.application.routes.draw do
   post "/orders/emergency_halt", to: "orders_dashboard#emergency_halt", as: "emergency_halt_orders"
   get "/fleet_radar", to: "fleet_radar#index", as: "fleet_radar"
   get "/returns", to: "returns_dashboard#index", as: "returns_dashboard"
+  post "/returns/:id/update_status", to: "returns_dashboard#update_status", as: "update_status_returns_dashboard"
+
   get "/inventory", to: "inventory#index", as: "inventory_dashboard"
   get "/analytics", to: "analytics#index", as: "analytics_dashboard"
   get "/manifests", to: "manifests#index", as: "manifests_dashboard"
@@ -44,18 +46,8 @@ Rails.application.routes.draw do
   post "/support/create_ticket", to: "support#create_ticket", as: "create_ticket_support"
   post "/support/start_chat", to: "support#start_chat", as: "start_chat_support"
 
-
-
-
-
-
   post "/orders/:id/print_label", to: "orders_dashboard#print_label", as: "print_label_dashboard"
   get "/orders/:id/label_view", to: "orders_dashboard#label_view", as: "label_view_dashboard"
   post "/orders/:id/dispatch_fleet_pulse", to: "orders_dashboard#dispatch_fleet_pulse", as: "dispatch_fleet_pulse_dashboard"
   patch "/orders/:id/update_status", to: "orders_dashboard#update_status", as: "update_status_dashboard"
 end
-
-
-
-
-

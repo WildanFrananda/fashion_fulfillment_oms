@@ -21,9 +21,13 @@ class ManifestsController < ApplicationController
     order_repo = T.let(Container[:order_repository], OrderRepositoryInterface)
     orders = order_repo.due_today(merchant_id: merchant_id)
 
-    @dispatched_orders = T.let(orders, T.nilable(T::Array[Order]))
-    render layout: "dashboard"
+    render Views::Manifests::Index.new(
+      dispatched_orders: orders,
+      current_merchant: @current_merchant,
+      merchants: @merchants
+    ), layout: false
   end
+
 
   sig { void }
   def handover_pdf

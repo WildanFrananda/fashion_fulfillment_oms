@@ -1,4 +1,5 @@
 # typed: strict
+
 require "socket"
 require "timeout"
 require "net/http"
@@ -73,10 +74,17 @@ class SupportController < ApplicationController
       measured_ping = nil
     end
 
-    @phoenix_healthy = T.let(phoenix_online, T.nilable(T::Boolean))
-    @phoenix_ping_ms = T.let(measured_ping, T.nilable(Integer))
-
-    render layout: "dashboard"
+    render Views::Support::Index.new(
+      action_cable_healthy: action_cable_online,
+      phoenix_healthy: phoenix_online,
+      phoenix_ping_ms: measured_ping || 0,
+      db_healthy: db_connected,
+      base_url: request.base_url,
+      current_merchant: @current_merchant,
+      merchants: @merchants,
+      notice_flash: flash[:notice],
+      alert_flash: flash[:alert]
+    ), layout: false
   end
 
   sig { void }

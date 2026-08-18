@@ -52,7 +52,13 @@ class ScannerController < ApplicationController
       end
     end
 
-    render layout: false
+    render Views::Scanner::Index.new(
+      active_scan_target: @active_scan_target,
+      current_merchant: @current_merchant,
+      merchants: @merchants,
+      notice_flash: flash[:notice],
+      alert_flash: flash[:alert]
+    ), layout: false
   end
 
   sig { void }

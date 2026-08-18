@@ -80,7 +80,10 @@ class FleetRadarController < ApplicationController
       )
     end
 
-    @telemetry_items = T.let(telemetry_list, T.nilable(T::Array[DriverTelemetryData]))
-    render layout: "dashboard"
+    render Views::FleetRadar::Index.new(
+      telemetry_items: telemetry_list,
+      current_merchant: @current_merchant,
+      merchants: @merchants
+    ), layout: false
   end
 end

@@ -15,7 +15,13 @@ class SettingsController < ApplicationController
 
     @current_merchant = T.let(selected_merchant || merchants.first, T.nilable(Merchant))
 
-    render layout: "dashboard"
+    render Views::Settings::Index.new(
+      current_merchant: @current_merchant,
+      merchants: @merchants,
+      base_url: request.base_url,
+      notice_flash: flash[:notice],
+      alert_flash: flash[:alert]
+    ), layout: false
   end
 
   sig { void }

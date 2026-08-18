@@ -22,8 +22,13 @@ class ReturnsDashboardController < ApplicationController
     returns = return_repo.find_by_merchant(merchant_id: merchant_id)
 
 
-    @return_items = T.let(returns, T.nilable(T::Array[Return]))
-    render layout: "dashboard"
+    render Views::ReturnsDashboard::Index.new(
+      return_items: returns,
+      current_merchant: @current_merchant,
+      merchants: @merchants,
+      notice_flash: flash[:notice],
+      alert_flash: flash[:alert]
+    ), layout: false
   end
 
   sig { void }

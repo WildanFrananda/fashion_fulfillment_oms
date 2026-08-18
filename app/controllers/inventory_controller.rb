@@ -76,7 +76,10 @@ class InventoryController < ApplicationController
       end
     end
 
-    @inventory_list = T.let(items_map.values, T.nilable(T::Array[InventoryItemData]))
-    render layout: "dashboard"
+    render Views::Inventory::Index.new(
+      inventory_list: items_map.values,
+      current_merchant: @current_merchant,
+      merchants: @merchants
+    ), layout: false
   end
 end
