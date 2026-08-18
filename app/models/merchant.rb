@@ -10,5 +10,18 @@ class Merchant < ApplicationRecord
   validates :name, presence: true
   validates :code, presence: true, uniqueness: true
   validates :api_key, presence: true, uniqueness: true
-  validates :cutoff_hour, presence: true, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 23 }
+  validates :latitude, presence: true
+  validates :longitude, presence: true
+
+  sig { returns(Float) }
+  def latitude_float
+    (T.unsafe(self).latitude || BigDecimal("-6.2088")).to_f
+  end
+
+  sig { returns(Float) }
+  def longitude_float
+    (T.unsafe(self).longitude || BigDecimal("106.8456")).to_f
+  end
 end
+
+

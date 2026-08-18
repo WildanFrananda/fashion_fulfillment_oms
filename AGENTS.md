@@ -20,6 +20,8 @@ Guidance for AI coding agents (Claude Code, Cursor, etc.) working in this Ruby o
 - **MANDATORY FOLLOW-UP QUESTIONS & ITERATIVE ALIGNMENT:** If the user's response or requirements contain any ambiguity, underspecified details, or potential edge cases, the AI agent MUST ask follow-up questions to resolve all ambiguities before executing any code.
 - **STRICT PROHIBITION OF FAKE/SKELETON FEATURES (NO FAKE FEATURES):** The AI agent is strictly forbidden from creating fake, decorative, or useless skeleton implementations. Every feature MUST be engineered for real production execution using actual browser/system APIs, real network sockets, and real database mutations.
 - **MANDATORY TECHNICAL & ARCHITECTURAL INTERVIEW:** Before building any feature, the AI agent MUST carefully plan the real execution flow and interview/ask the user regarding the real execution hardware/APIs, code structure, clean code design patterns, and domain preferences to align 100% with the user's wishes.
+- **NEVER HARDCODE FALLBACK VALUES; CREATE DATABASE MIGRATIONS INSTEAD:** If a database table or model lacks required attributes (such as latitude, longitude, configurations, or status flags), the AI agent MUST NEVER hardcode arbitrary fallback values inside controllers, services, or views. The AI agent MUST create proper database migrations, update ActiveRecord models, update Sorbet `# typed: strict` signatures, and populate real values via seeders or database records.
+
 
 
 
