@@ -314,13 +314,48 @@ end
 
 module Fleet
   module V1
-    class DispatchCourierRequest; end
-    class DispatchCourierResponse; end
+    class DispatchCourierRequest
+      extend T::Sig
+      sig do
+        params(
+          merchant_api_key: String,
+          order_id: Integer,
+          order_number: String,
+          pickup_address: T.nilable(Common::V1::Address),
+          delivery_address: T.nilable(Common::V1::Address)
+        ).void
+      end
+      def initialize(merchant_api_key: "", order_id: 0, order_number: "", pickup_address: nil, delivery_address: nil); end
+    end
+
+    class DispatchCourierResponse
+      extend T::Sig
+      sig { returns(T::Boolean) }
+      def success; end
+      sig { returns(String) }
+      def dispatch_ref; end
+      sig { returns(String) }
+      def assigned_driver_name; end
+      sig { returns(String) }
+      def assigned_driver_phone; end
+      sig { returns(String) }
+      def vehicle; end
+      sig { returns(Integer) }
+      def eta_minutes; end
+    end
+
     class DriverLocationPing; end
     class DriverLocationAck; end
 
     module CourierTelemetryService
       class Service; end
+      class Stub
+        extend T::Sig
+        sig { params(host: String, creds: Symbol, timeout: Integer).void }
+        def initialize(host, creds, timeout: 5); end
+        sig { params(req: DispatchCourierRequest).returns(DispatchCourierResponse) }
+        def dispatch_courier(req); end
+      end
     end
   end
 end

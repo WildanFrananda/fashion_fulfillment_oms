@@ -178,6 +178,9 @@ module GeneratedPathHelpersModule
   def test_ping_settings_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
+  def tracking_stream_path(*args); end
+
+  sig { params(args: T.untyped).returns(String) }
   def turbo_recede_historical_location_path(*args); end
 
   sig { params(args: T.untyped).returns(String) }
