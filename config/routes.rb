@@ -27,7 +27,6 @@ Rails.application.routes.draw do
   post "/scan/verify", to: "scanner#verify", as: "verify_scan"
   get "/orders", to: "orders_dashboard#index"
 
-
   post "/orders/manual_create", to: "orders_dashboard#create_manual_order", as: "manual_create_orders"
   post "/orders/emergency_halt", to: "orders_dashboard#emergency_halt", as: "emergency_halt_orders"
   get "/fleet_radar", to: "fleet_radar#index", as: "fleet_radar"

@@ -20,6 +20,12 @@ gem "jbuilder"
 gem "faye-websocket"
 gem "barby"
 gem "phlex-rails"
+gem "grpc"
+
+group :development do
+  gem "grpc-tools"
+end
+
 
 
 
